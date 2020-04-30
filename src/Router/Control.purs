@@ -1,4 +1,19 @@
-module React.Basic.Hooks.Router.Control where
+module React.Basic.Hooks.Router.Control
+  ( Transition(..)
+  , _Transition
+  , _Pending
+  , _Completed
+  , isPending
+  , isCompleted
+  , Command(..)
+  , Pending
+  , Completed
+  , Router
+  , runRouter
+  , redirect
+  , override
+  , continue
+  ) where
 
 import Prelude
 import Control.Monad.Except (ExceptT, except, runExceptT)

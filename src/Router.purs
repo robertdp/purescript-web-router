@@ -5,7 +5,8 @@ module React.Basic.Hooks.Router
   , UseRouter
   , useTransition
   , useRoute
-  , module Exports
+  , module Control
+  , module Ix
   ) where
 
 import Prelude
@@ -26,7 +27,8 @@ import React.Basic.Hooks.Router.Signal (Signal, UseSignal)
 import React.Basic.Hooks.Router.Signal as Signal
 import Routing.PushState (PushStateInterface)
 import Routing.PushState as Routing
-import React.Basic.Hooks.Router.Control (Completed, Pending, Router, Transition(..), _Completed, _Pending, _Transition, continue, isCompleted, isPending, override, redirect) as Exports
+import React.Basic.Hooks.Router.Control (Completed, Pending, Router, Transition(..), _Completed, _Pending, _Transition, continue, isCompleted, isPending, override, redirect) as Control
+import Control.Monad.Indexed.Qualified (apply, bind, discard, map, pure) as Ix
 
 create ::
   forall f route.
