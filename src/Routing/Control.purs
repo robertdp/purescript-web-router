@@ -1,4 +1,4 @@
-module React.Basic.Hooks.Routing.Control where
+module React.Basic.Hooks.Router.Control where
 
 import Prelude
 import Control.Monad.Except (ExceptT, except, runExceptT)
@@ -54,55 +54,55 @@ data Pending
 
 data Completed
 
-newtype Routing route i o a
-  = Routing (ExceptT (Command route) Aff a)
+newtype Router route i o a
+  = Router (ExceptT (Command route) Aff a)
 
-runRouting :: forall route. Routing route Pending Completed Unit -> Aff (Command route)
-runRouting (Routing routing) = unsafePartial fromLeft <$> runExceptT routing
+runRouter :: forall route. Router route Pending Completed Unit -> Aff (Command route)
+runRouter (Router router) = unsafePartial fromLeft <$> runExceptT router
 
-liftCommand :: forall route. Command route -> Routing route Pending Completed Unit
+liftCommand :: forall route. Command route -> Router route Pending Completed Unit
 liftCommand = wrap <<< except <<< Left
 
-redirect :: forall route. route -> Routing route Pending Completed Unit
+redirect :: forall route. route -> Router route Pending Completed Unit
 redirect = liftCommand <<< Redirect
 
-override :: forall route. route -> Routing route Pending Completed Unit
+override :: forall route. route -> Router route Pending Completed Unit
 override = liftCommand <<< Override
 
-continue :: forall route. Routing route Pending Completed Unit
+continue :: forall route. Router route Pending Completed Unit
 continue = liftCommand Continue
 
-derive instance newtypeRouting :: Newtype (Routing route i o a) _
+derive instance newtypeRouter :: Newtype (Router route i o a) _
 
-instance ixFunctorRouting :: IxFunctor (Routing route) where
+instance ixFunctorRouter :: IxFunctor (Router route) where
   imap f a = wrap do f <$> unwrap a
 
-instance ixApplyRouting :: IxApply (Routing route) where
+instance ixApplyRouter :: IxApply (Router route) where
   iapply f a = wrap do unwrap f <*> unwrap a
 
-instance ixBindRouting :: IxBind (Routing route) where
+instance ixBindRouter :: IxBind (Router route) where
   ibind ma f = wrap do unwrap ma >>= unwrap <<< f
 
-instance ixApplicativeRouting :: IxApplicative (Routing route) where
+instance ixApplicativeRouter :: IxApplicative (Router route) where
   ipure = wrap <<< pure
 
-instance ixMonadRouting :: IxMonad (Routing route)
+instance ixMonadRouter :: IxMonad (Router route)
 
-derive instance functorRouting :: Functor (Routing route Pending Pending)
+derive instance functorRouter :: Functor (Router route Pending Pending)
 
-instance applyRouting :: Apply (Routing route Pending Pending) where
+instance applyRouter :: Apply (Router route Pending Pending) where
   apply = iapply
 
-instance applicativeRouting :: Applicative (Routing route Pending Pending) where
+instance applicativeRouter :: Applicative (Router route Pending Pending) where
   pure = ipure
 
-instance bindRouting :: Bind (Routing route Pending Pending) where
+instance bindRouter :: Bind (Router route Pending Pending) where
   bind = ibind
 
-instance monadRouting :: Monad (Routing route Pending Pending)
+instance monadRouter :: Monad (Router route Pending Pending)
 
-instance monadEffectRouting :: MonadEffect (Routing route Pending Pending) where
+instance monadEffectRouter :: MonadEffect (Router route Pending Pending) where
   liftEffect = wrap <<< liftEffect
 
-instance monadAffRouting :: MonadAff (Routing route Pending Pending) where
+instance monadAffRouter :: MonadAff (Router route Pending Pending) where
   liftAff = wrap <<< liftAff

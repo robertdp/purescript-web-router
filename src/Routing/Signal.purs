@@ -1,4 +1,4 @@
-module React.Basic.Hooks.Routing.Signal where
+module React.Basic.Hooks.Router.Signal where
 
 import Prelude
 import Data.Array (deleteBy, snoc)

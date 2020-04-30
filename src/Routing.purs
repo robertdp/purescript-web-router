@@ -1,4 +1,4 @@
-module React.Basic.Hooks.Routing where
+module React.Basic.Hooks.Router where
 
 import Prelude
 import Data.Either (Either(..))
@@ -10,9 +10,9 @@ import Effect.Console as Console
 import Effect.Ref as Ref
 import React.Basic (JSX, ReactContext)
 import React.Basic.Hooks as React
-import React.Basic.Hooks.Routing.Control (Command(..), Completed, Pending, Routing, Transition(..), runRouting)
-import React.Basic.Hooks.Routing.Signal (Signal)
-import React.Basic.Hooks.Routing.Signal as Signal
+import React.Basic.Hooks.Router.Control (Command(..), Completed, Pending, Router, Transition(..), runRouter)
+import React.Basic.Hooks.Router.Signal (Signal)
+import React.Basic.Hooks.Router.Signal as Signal
 import Routing.PushState (PushStateInterface)
 import Routing.PushState as Routing
 
@@ -23,7 +23,7 @@ create ::
   , interface :: PushStateInterface
   , initial :: Transition route
   , parser :: String -> f route
-  , onRoute :: route -> Routing route Pending Completed Unit
+  , onRoute :: route -> Router route Pending Completed Unit
   , redirect :: route -> Effect Unit
   } ->
   Effect (Array JSX -> JSX)
@@ -49,7 +49,7 @@ create { context, interface, initial, parser, onRoute, redirect } = do
                   Signal.write transition (Completed previousRoute r)
               fiber <-
                 onRoute route
-                  # runRouting
+                  # runRouter
                   # runAff \res -> do
                       Ref.write Nothing fiberRef
                       case res of
