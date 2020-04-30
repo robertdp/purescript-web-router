@@ -1,4 +1,12 @@
-module React.Basic.Hooks.Router.Signal where
+module React.Basic.Hooks.Router.Signal
+  ( Signal
+  , create
+  , read
+  , write
+  , subscribe
+  , UseSignal
+  , useSignal
+  ) where
 
 import Prelude
 import Data.Array (deleteBy, snoc)

@@ -1,4 +1,12 @@
-module React.Basic.Hooks.Router where
+module React.Basic.Hooks.Router
+  ( RouterContext
+  , create
+  , createContext
+  , UseRouter
+  , useTransition
+  , useRoute
+  , module Exports
+  ) where
 
 import Prelude
 import Data.Either (Either(..))
@@ -18,6 +26,7 @@ import React.Basic.Hooks.Router.Signal (Signal, UseSignal)
 import React.Basic.Hooks.Router.Signal as Signal
 import Routing.PushState (PushStateInterface)
 import Routing.PushState as Routing
+import React.Basic.Hooks.Router.Control (Completed, Pending, Router, Transition(..), _Completed, _Pending, _Transition, continue, isCompleted, isPending, override, redirect) as Exports
 
 newtype RouterContext route
   = RouterContext (ReactContext (Signal (Transition route)))
@@ -73,16 +82,16 @@ createContext route = do
   signal <- Signal.create $ review _Completed route
   RouterContext <$> React.createContext signal
 
-newtype UseTransition route hooks
-  = UseTransition (UseSignal (Transition route) (UseContext (Signal (Transition route)) hooks))
+newtype UseRouter route hooks
+  = UseRouter (UseSignal (Transition route) (UseContext (Signal (Transition route)) hooks))
 
-derive instance newtypeUseTransition :: Newtype (UseTransition a hooks) _
+derive instance newtypeUseRouter :: Newtype (UseRouter a hooks) _
 
-useTransition :: forall route. RouterContext route -> Hook (UseTransition route) (Transition route)
+useTransition :: forall route. RouterContext route -> Hook (UseRouter route) (Transition route)
 useTransition (RouterContext context) =
   React.coerceHook React.do
     signal <- React.useContext context
     Signal.useSignal signal
 
-useRoute :: forall route. RouterContext route -> Hook (UseTransition route) route
+useRoute :: forall route. RouterContext route -> Hook (UseRouter route) route
 useRoute context = view _Transition <$> useTransition context
