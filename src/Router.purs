@@ -3,36 +3,42 @@ module React.Basic.Hooks.Router where
 import Prelude
 import Data.Either (Either(..))
 import Data.Foldable (class Foldable, for_)
+import Data.Lens (review, view)
 import Data.Maybe (Maybe(..))
+import Data.Newtype (class Newtype)
 import Effect (Effect)
 import Effect.Aff (error, killFiber, launchAff_, runAff)
 import Effect.Console as Console
 import Effect.Ref as Ref
 import React.Basic (JSX, ReactContext)
+import React.Basic.Hooks (UseContext, Hook)
 import React.Basic.Hooks as React
-import React.Basic.Hooks.Router.Control (Command(..), Completed, Pending, Router, Transition(..), runRouter)
-import React.Basic.Hooks.Router.Signal (Signal)
+import React.Basic.Hooks.Router.Control (Command(..), Completed, Pending, Router, Transition(..), _Completed, _Transition, runRouter)
+import React.Basic.Hooks.Router.Signal (Signal, UseSignal)
 import React.Basic.Hooks.Router.Signal as Signal
 import Routing.PushState (PushStateInterface)
 import Routing.PushState as Routing
 
+newtype RouterContext route
+  = RouterContext (ReactContext (Signal (Transition route)))
+
 create ::
   forall f route.
   Foldable f =>
-  { context :: ReactContext (Signal (Transition route))
+  { context :: RouterContext route
   , interface :: PushStateInterface
-  , initial :: Transition route
+  , initial :: route
   , parser :: String -> f route
   , onRoute :: route -> Router route Pending Completed Unit
   , redirect :: route -> Effect Unit
   } ->
   Effect (Array JSX -> JSX)
-create { context, interface, initial, parser, onRoute, redirect } = do
+create { context: RouterContext context, interface, initial, parser, onRoute, redirect } = do
   router <- mkRouter
   pure \content -> router { content }
   where
   mkRouter = do
-    transition <- Signal.create initial
+    transition <- Signal.create $ review _Completed initial
     fiberRef <- Ref.new Nothing
     previousRouteRef <- Ref.new Nothing
     React.component "Router" \props -> React.do
@@ -61,3 +67,22 @@ create { context, interface, initial, parser, onRoute, redirect } = do
                           Continue -> writeOut route
               Ref.write (Just fiber) fiberRef
       pure $ React.provider context transition props.content
+
+createContext :: forall route. route -> Effect (RouterContext route)
+createContext route = do
+  signal <- Signal.create $ review _Completed route
+  RouterContext <$> React.createContext signal
+
+newtype UseTransition route hooks
+  = UseTransition (UseSignal (Transition route) (UseContext (Signal (Transition route)) hooks))
+
+derive instance newtypeUseTransition :: Newtype (UseTransition a hooks) _
+
+useTransition :: forall route. RouterContext route -> Hook (UseTransition route) (Transition route)
+useTransition (RouterContext context) =
+  React.coerceHook React.do
+    signal <- React.useContext context
+    Signal.useSignal signal
+
+useRoute :: forall route. RouterContext route -> Hook (UseTransition route) route
+useRoute context = view _Transition <$> useTransition context
