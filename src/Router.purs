@@ -28,9 +28,6 @@ import Routing.PushState (PushStateInterface)
 import Routing.PushState as Routing
 import React.Basic.Hooks.Router.Control (Completed, Pending, Router, Transition(..), _Completed, _Pending, _Transition, continue, isCompleted, isPending, override, redirect) as Exports
 
-newtype RouterContext route
-  = RouterContext (ReactContext (Signal (Transition route)))
-
 create ::
   forall f route.
   Foldable f =>
@@ -76,6 +73,9 @@ create { context: RouterContext context, interface, initial, parser, navigate, r
                           Continue -> writeOut route
               Ref.write (Just fiber) fiberRef
       pure $ React.provider context transition props.content
+
+newtype RouterContext route
+  = RouterContext (ReactContext (Signal (Transition route)))
 
 createContext :: forall route. route -> Effect (RouterContext route)
 createContext route = do
