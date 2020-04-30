@@ -3,8 +3,13 @@ module React.Basic.Hooks.Router.Signal where
 import Prelude
 import Data.Array (deleteBy, snoc)
 import Data.Foldable (traverse_)
+import Data.Tuple.Nested ((/\))
+import Data.Newtype (class Newtype)
 import Effect (Effect)
 import Effect.Ref as Ref
+import Effect.Unsafe (unsafePerformEffect)
+import React.Basic.Hooks (UnsafeReference(..), UseEffect, UseState, Hook)
+import React.Basic.Hooks as React
 import Unsafe.Reference (unsafeRefEq)
 
 newtype Signal a
@@ -44,3 +49,15 @@ write (Signal signal) = signal.write
 
 subscribe :: forall a. Signal a -> (a -> Effect Unit) -> Effect (Effect Unit)
 subscribe (Signal signal) = signal.subscribe
+
+newtype UseSignal a hooks
+  = UseSignal (UseEffect (UnsafeReference (Signal a)) (UseState a hooks))
+
+derive instance newtypeUseSignal :: Newtype (UseSignal a hooks) _
+
+useSignal :: forall a. Signal a -> Hook (UseSignal a) a
+useSignal signal =
+  React.coerceHook React.do
+    value /\ setValue <- React.useState $ unsafePerformEffect $ read signal
+    React.useEffect (UnsafeReference signal) do subscribe signal (setValue <<< const)
+    pure value
