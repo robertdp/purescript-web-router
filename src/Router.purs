@@ -38,11 +38,11 @@ create ::
   , interface :: PushStateInterface
   , initial :: route
   , parser :: String -> f route
-  , onRoute :: route -> Router route Pending Completed Unit
+  , navigate :: route -> Router route Pending Completed Unit
   , redirect :: route -> Effect Unit
   } ->
   Effect (Array JSX -> JSX)
-create { context: RouterContext context, interface, initial, parser, onRoute, redirect } = do
+create { context: RouterContext context, interface, initial, parser, navigate, redirect } = do
   router <- mkRouter
   pure \content -> router { content }
   where
@@ -63,7 +63,7 @@ create { context: RouterContext context, interface, initial, parser, onRoute, re
                   Ref.write (Just r) previousRouteRef
                   Signal.write transition (Completed previousRoute r)
               fiber <-
-                onRoute route
+                navigate route
                   # runRouter
                   # runAff \res -> do
                       Ref.write Nothing fiberRef
