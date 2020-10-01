@@ -9,7 +9,7 @@ import Data.Foldable (class Foldable, traverse_)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (error, killFiber, launchAff, launchAff_)
-import Effect.Class (class MonadEffect, liftEffect)
+import Effect.Class (liftEffect)
 import Effect.Ref as Ref
 import Foreign (unsafeToForeign)
 import React.Basic.Hooks (JSX)
@@ -17,7 +17,7 @@ import React.Basic.Hooks as React
 import Routing.PushState (PushStateInterface)
 import Routing.PushState as PushState
 import Wire.React.Router.Control (Command(..), Resolved, Route(..), Router(..), Transitioning)
-import Wire.React.Router.Control (Command(..), Resolved, Route(..), Router(..), Transitioning, _Resolved, _Route, _Transitioning, continue, isResolved, isTransitioning, override, redirect) as Control
+import Wire.React.Router.Control (Command, Resolved, Route(..), Router, Transitioning, _Resolved, _Route, _Transitioning, continue, isResolved, isTransitioning, override, redirect) as Control
 import Wire.Signal (Signal)
 import Wire.Signal as Signal
 

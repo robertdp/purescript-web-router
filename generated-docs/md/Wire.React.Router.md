@@ -19,7 +19,6 @@ data Transitioning
 
 ``` purescript
 newtype Router route i o a
-  = Router (FreeT (Command route) Aff a)
 ```
 
 ##### Instances
@@ -62,9 +61,6 @@ data Resolved
 
 ``` purescript
 data Command route a
-  = Redirect route
-  | Override route
-  | Continue
 ```
 
 ##### Instances
