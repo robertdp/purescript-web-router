@@ -23,7 +23,6 @@ import Wire.Signal as Signal
 
 makeRouter ::
   forall route f m.
-  Eq route =>
   Foldable f =>
   MonadEffect m =>
   { interface :: PushStateInterface
@@ -77,4 +76,4 @@ makeRouter { interface, initial, decode, encode, onRouteChange } =
         React.component "Wire.Router" \_ -> React.do
           React.useEffectOnce do onPushState runRouter
           pure React.empty
-      pure { signal: Signal.distinct signal, component: component unit, navigate, redirect }
+      pure { signal, component: component unit, navigate, redirect }
