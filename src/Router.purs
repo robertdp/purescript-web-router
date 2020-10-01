@@ -5,7 +5,7 @@ module Wire.React.Router
 
 import Prelude
 import Control.Monad.Free.Trans (runFreeT)
-import Data.Foldable (class Foldable, traverse_)
+import Data.Foldable (class Foldable, for_, traverse_)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (error, killFiber, launchAff, launchAff_)
@@ -25,7 +25,7 @@ makeRouter ::
   forall route f.
   Foldable f =>
   { interface :: PushStateInterface
-  , initial :: route
+  , default :: route
   , decode :: String -> f route
   , encode :: route -> String
   , onRouteChange :: route -> Router route Transitioning Resolved Unit
@@ -36,7 +36,7 @@ makeRouter ::
     , navigate :: route -> Effect Unit
     , redirect :: route -> Effect Unit
     }
-makeRouter { interface, initial, decode, encode, onRouteChange } =
+makeRouter { interface, default, decode, encode, onRouteChange } =
   let
     onPushState k = PushState.matchesWith decode (\_ -> k) interface
 
@@ -45,11 +45,14 @@ makeRouter { interface, initial, decode, encode, onRouteChange } =
     redirect route = interface.replaceState (unsafeToForeign {}) (encode route)
   in
     do
-      { modify, signal } <- Signal.create (Transitioning Nothing initial)
+      { modify, signal } <- Signal.create (Transitioning Nothing default)
+      -- replace the user-supplied default route with the current route, if possible
+      interface.locationState >>= \{ path } -> for_ (decode path) \route -> modify \_ -> Transitioning Nothing route
       fiberRef <- Ref.new Nothing
       previousRouteRef <- Ref.new Nothing
       let
         runRouter route = do
+          -- if some previous long-running routing logic is still active, kill it
           Ref.read fiberRef >>= traverse_ (launchAff_ <<< killFiber (error "Transition cancelled"))
           previousRoute <- Ref.read previousRouteRef
           modify \_ -> Transitioning previousRoute route

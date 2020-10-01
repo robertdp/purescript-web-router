@@ -125,7 +125,7 @@ let overrides = {=}
 
 let additions =
   { wire =
-    { dependencies = [ "aff", "filterable", "foreign-object", "refs", "unsafe-reference" ]
+    { dependencies = [ "aff", "filterable", "refs", "unsafe-reference" ]
     , repo = "https://github.com/robertdp/purescript-wire.git"
     , version = "v0.4.2"
     }
