@@ -32,7 +32,7 @@ makeRouter ::
   } ->
   Effect
     { signal :: Signal (Route route)
-    , component :: JSX
+    , router :: JSX
     , navigate :: route -> Effect Unit
     , redirect :: route -> Effect Unit
     }
@@ -74,4 +74,4 @@ makeRouter { interface, initial, decode, encode, onRouteChange } =
         React.component "Wire.Router" \_ -> React.do
           React.useEffectOnce do onPushState runRouter
           pure React.empty
-      pure { signal, component: component unit, navigate, redirect }
+      pure { signal, router: component unit, navigate, redirect }
