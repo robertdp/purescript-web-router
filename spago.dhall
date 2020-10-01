@@ -6,10 +6,11 @@ You can edit this file as you like.
 , dependencies =
   [ "aff"
   , "indexed-monad"
+  , "freet"
   , "profunctor-lenses"
+  , "react-basic-hooks"
   , "routing"
-  , "routing-duplex"
-  , "wire-react"
+  , "wire"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
