@@ -1,123 +1,109 @@
-module React.Basic.Hooks.Router.Control
-  ( Transition(..)
-  , _Transition
-  , _Pending
-  , _Completed
-  , isPending
-  , isCompleted
-  , Command(..)
-  , Pending
-  , Completed
-  , Router
-  , runRouter
-  , redirect
-  , override
-  , continue
-  ) where
+module Wire.React.Router.Control where
 
 import Prelude
-import Control.Monad.Except (ExceptT, except, runExceptT)
-import Control.Monad.Indexed (class IxApplicative, class IxApply, class IxBind, class IxFunctor, class IxMonad, iapply, ibind, ipure)
-import Data.Either (Either(..), fromLeft)
+import Control.Monad.Free.Trans (FreeT, liftFreeT)
+import Control.Monad.Indexed (class IxApplicative, class IxApply, class IxBind, class IxFunctor, class IxMonad, iap)
 import Data.Lens (Lens', Prism', is, lens, prism')
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, unwrap, wrap)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
-import Partial.Unsafe (unsafePartial)
+import Type.Equality (class TypeEquals)
 
-data Transition route
-  = Pending (Maybe route) route
-  | Completed (Maybe route) route
+data Route route
+  = Transitioning (Maybe route) route
+  | Resolved (Maybe route) route
 
-_Transition :: forall route. Lens' (Transition route) route
-_Transition = lens getter setter
+derive instance eqRoute :: Eq route => Eq (Route route)
+
+_Route :: forall route. Lens' (Route route) route
+_Route = lens getter setter
   where
   getter = case _ of
-    Pending _ route -> route
-    Completed _ route -> route
+    Transitioning _ route -> route
+    Resolved _ route -> route
 
   setter = case _ of
-    Pending route _ -> Pending route
-    Completed route _ -> Completed route
+    Transitioning route _ -> Transitioning route
+    Resolved route _ -> Resolved route
 
-_Pending :: forall route. Prism' (Transition route) route
-_Pending =
-  prism' (Pending Nothing) case _ of
-    Pending _ route -> Just route
+_Transitioning :: forall route. Prism' (Route route) route
+_Transitioning =
+  prism' (Transitioning Nothing) case _ of
+    Transitioning _ route -> Just route
     _ -> Nothing
 
-_Completed :: forall route. Prism' (Transition route) route
-_Completed =
-  prism' (Completed Nothing) case _ of
-    Completed _ route -> Just route
+_Resolved :: forall route. Prism' (Route route) route
+_Resolved =
+  prism' (Resolved Nothing) case _ of
+    Resolved _ route -> Just route
     _ -> Nothing
 
-isPending :: forall route. Transition route -> Boolean
-isPending = is _Pending
+isTransitioning :: forall route. Route route -> Boolean
+isTransitioning = is _Transitioning
 
-isCompleted :: forall route. Transition route -> Boolean
-isCompleted = is _Completed
+isResolved :: forall route. Route route -> Boolean
+isResolved = is _Resolved
 
-data Command route
+data Command route a
   = Redirect route
   | Override route
   | Continue
 
-data Pending
+derive instance functorCommand :: Functor (Command route)
 
-data Completed
+data Transitioning
+
+data Resolved
 
 newtype Router route i o a
-  = Router (ExceptT (Command route) Aff a)
+  = Router (FreeT (Command route) Aff a)
 
-runRouter :: forall route. Router route Pending Completed Unit -> Aff (Command route)
-runRouter (Router router) = unsafePartial fromLeft <$> runExceptT router
+liftCommand :: forall route. Command route Unit -> Router route Transitioning Resolved Unit
+liftCommand cmd = Router (liftFreeT cmd)
 
-liftCommand :: forall route. Command route -> Router route Pending Completed Unit
-liftCommand = wrap <<< except <<< Left
-
-redirect :: forall route. route -> Router route Pending Completed Unit
+redirect :: forall route. route -> Router route Transitioning Resolved Unit
 redirect = liftCommand <<< Redirect
 
-override :: forall route. route -> Router route Pending Completed Unit
+override :: forall route. route -> Router route Transitioning Resolved Unit
 override = liftCommand <<< Override
 
-continue :: forall route. Router route Pending Completed Unit
+continue :: forall route. Router route Transitioning Resolved Unit
 continue = liftCommand Continue
 
 derive instance newtypeRouter :: Newtype (Router route i o a) _
 
 instance ixFunctorRouter :: IxFunctor (Router route) where
-  imap f a = wrap do f <$> unwrap a
+  imap f (Router router) = Router (map f router)
 
 instance ixApplyRouter :: IxApply (Router route) where
-  iapply f a = wrap do unwrap f <*> unwrap a
+  iapply = iap
 
 instance ixBindRouter :: IxBind (Router route) where
-  ibind ma f = wrap do unwrap ma >>= unwrap <<< f
+  ibind (Router router) f = Router (router >>= \a -> case f a of Router next -> next)
 
 instance ixApplicativeRouter :: IxApplicative (Router route) where
-  ipure = wrap <<< pure
+  ipure a = Router (pure a)
 
 instance ixMonadRouter :: IxMonad (Router route)
 
-derive instance functorRouter :: Functor (Router route Pending Pending)
+instance functorRouter :: (TypeEquals Transitioning i, TypeEquals i o) => Functor (Router route i o) where
+  map f a = wrap do f <$> unwrap a
 
-instance applyRouter :: Apply (Router route Pending Pending) where
-  apply = iapply
+instance applyRouter :: (TypeEquals Transitioning i, TypeEquals i o) => Apply (Router route i o) where
+  apply = ap
 
-instance applicativeRouter :: Applicative (Router route Pending Pending) where
-  pure = ipure
+instance applicativeRouter :: (TypeEquals Transitioning i, TypeEquals i o) => Applicative (Router route i o) where
+  pure a = Router (pure a)
 
-instance bindRouter :: Bind (Router route Pending Pending) where
-  bind = ibind
+instance bindRouter :: (TypeEquals Transitioning i, TypeEquals i o) => Bind (Router route i o) where
+  bind (Router router) f = Router (router >>= \a -> case f a of Router next -> next)
 
-instance monadRouter :: Monad (Router route Pending Pending)
+instance monadRouter :: (TypeEquals Transitioning i, TypeEquals i o) => Monad (Router route i o)
 
-instance monadEffectRouter :: MonadEffect (Router route Pending Pending) where
-  liftEffect = wrap <<< liftEffect
+instance monadEffectRouter :: (TypeEquals Transitioning i, TypeEquals i o) => MonadEffect (Router route i o) where
+  liftEffect eff = Router (liftEffect eff)
 
-instance monadAffRouter :: MonadAff (Router route Pending Pending) where
-  liftAff = wrap <<< liftAff
+instance monadAffRouter :: (TypeEquals Transitioning i, TypeEquals i o) => MonadAff (Router route i o) where
+  liftAff aff = Router (liftAff aff)

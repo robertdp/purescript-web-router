@@ -1,17 +1,18 @@
 {
-  "name": "purescript-react-basic-hooks-routing",
+  "name": "purescript-wire-react-routing",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "spago build",
+    "docs": "spago docs --format markdown"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "purescript": "^0.13.6",
+    "purescript": "^0.13.8",
     "purescript-psa": "^0.7.3",
     "purty": "^6.2.0",
-    "spago": "^0.15.2"
+    "spago": "^0.16.0"
   }
 }

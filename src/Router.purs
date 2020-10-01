@@ -1,99 +1,80 @@
-module React.Basic.Hooks.Router
-  ( RouterContext
-  , create
-  , createContext
-  , UseRouter
-  , useTransition
-  , useRoute
-  , module Control
-  , module Ix
+module Wire.React.Router
+  ( module Control
+  , makeRouter
   ) where
 
 import Prelude
-import Data.Either (Either(..))
-import Data.Foldable (class Foldable, for_)
-import Data.Lens (review, view)
+import Control.Monad.Free.Trans (runFreeT)
+import Data.Foldable (class Foldable, traverse_)
 import Data.Maybe (Maybe(..))
-import Data.Newtype (class Newtype)
 import Effect (Effect)
-import Effect.Aff (error, killFiber, launchAff_, runAff)
-import Effect.Console as Console
+import Effect.Aff (error, killFiber, launchAff, launchAff_)
+import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Ref as Ref
-import React.Basic (JSX, ReactContext)
-import React.Basic.Hooks (UseContext, Hook)
+import Foreign (unsafeToForeign)
+import React.Basic.Hooks (JSX)
 import React.Basic.Hooks as React
-import React.Basic.Hooks.Router.Control (Command(..), Completed, Pending, Router, Transition(..), _Completed, _Transition, runRouter)
-import React.Basic.Hooks.Router.Signal (Signal, UseSignal)
-import React.Basic.Hooks.Router.Signal as Signal
 import Routing.PushState (PushStateInterface)
-import Routing.PushState as Routing
-import React.Basic.Hooks.Router.Control (Completed, Pending, Router, Transition(..), _Completed, _Pending, _Transition, continue, isCompleted, isPending, override, redirect) as Control
-import Control.Monad.Indexed.Qualified (apply, bind, discard, map, pure) as Ix
+import Routing.PushState as PushState
+import Wire.React.Router.Control (Command(..), Resolved, Route(..), Router(..), Transitioning)
+import Wire.React.Router.Control (Command(..), Resolved, Route(..), Router(..), Transitioning, _Resolved, _Route, _Transitioning, continue, isResolved, isTransitioning, override, redirect) as Control
+import Wire.Signal (Signal)
+import Wire.Signal as Signal
 
-create ::
-  forall f route.
+makeRouter ::
+  forall route f m.
+  Eq route =>
   Foldable f =>
-  { context :: RouterContext route
-  , interface :: PushStateInterface
+  MonadEffect m =>
+  { interface :: PushStateInterface
   , initial :: route
-  , parser :: String -> f route
-  , navigate :: route -> Router route Pending Completed Unit
-  , redirect :: route -> Effect Unit
+  , decode :: String -> f route
+  , encode :: route -> String
+  , onRouteChange :: route -> Router route Transitioning Resolved Unit
   } ->
-  Effect (Array JSX -> JSX)
-create { context: RouterContext context, interface, initial, parser, navigate, redirect } = do
-  router <- mkRouter
-  pure \content -> router { content }
-  where
-  mkRouter = do
-    transition <- Signal.create $ review _Completed initial
-    fiberRef <- Ref.new Nothing
-    previousRouteRef <- Ref.new Nothing
-    React.component "Router" \props -> React.do
-      React.useEffect unit do
-        interface
-          # Routing.matchesWith parser \_ route -> do
-              oldFiber <- Ref.read fiberRef
-              for_ oldFiber $ launchAff_ <<< killFiber (error "Transition cancelled")
-              previousRoute <- Ref.read previousRouteRef
-              Signal.write transition (Pending previousRoute route)
-              let
-                writeOut r = do
-                  Ref.write (Just r) previousRouteRef
-                  Signal.write transition (Completed previousRoute r)
-              fiber <-
-                navigate route
-                  # runRouter
-                  # runAff \res -> do
-                      Ref.write Nothing fiberRef
-                      case res of
-                        Left err -> do
-                          Console.errorShow err
-                        Right cmd -> case cmd of
-                          Redirect route' -> redirect route'
-                          Override route' -> writeOut route'
-                          Continue -> writeOut route
-              Ref.write (Just fiber) fiberRef
-      pure $ React.provider context transition props.content
+  Effect
+    { signal :: Signal (Route route)
+    , component :: JSX
+    , navigate :: route -> Effect Unit
+    , redirect :: route -> Effect Unit
+    }
+makeRouter { interface, initial, decode, encode, onRouteChange } =
+  let
+    onPushState k = PushState.matchesWith decode (\_ -> k) interface
 
-newtype RouterContext route
-  = RouterContext (ReactContext (Signal (Transition route)))
+    navigate route = interface.pushState (unsafeToForeign {}) (encode route)
 
-createContext :: forall route. route -> Effect (RouterContext route)
-createContext route = do
-  signal <- Signal.create $ review _Completed route
-  RouterContext <$> React.createContext signal
-
-newtype UseRouter route hooks
-  = UseRouter (UseSignal (Transition route) (UseContext (Signal (Transition route)) hooks))
-
-derive instance newtypeUseRouter :: Newtype (UseRouter a hooks) _
-
-useTransition :: forall route. RouterContext route -> Hook (UseRouter route) (Transition route)
-useTransition (RouterContext context) =
-  React.coerceHook React.do
-    signal <- React.useContext context
-    Signal.useSignal signal
-
-useRoute :: forall route. RouterContext route -> Hook (UseRouter route) route
-useRoute context = view _Transition <$> useTransition context
+    redirect route = interface.replaceState (unsafeToForeign {}) (encode route)
+  in
+    do
+      { modify, signal } <- Signal.create (Transitioning Nothing initial)
+      fiberRef <- Ref.new Nothing
+      previousRouteRef <- Ref.new Nothing
+      let
+        runRouter :: route -> Effect Unit
+        runRouter route = do
+          Ref.read fiberRef >>= traverse_ (launchAff_ <<< killFiber (error "Transition cancelled"))
+          previousRoute <- Ref.read previousRouteRef
+          modify \_ -> Transitioning previousRoute route
+          let
+            finalise r =
+              liftEffect do
+                Ref.write (Just r) previousRouteRef
+                modify \_ -> Resolved previousRoute r
+          fiber <-
+            launchAff case onRouteChange route of
+              Router router ->
+                router
+                  # runFreeT \cmd -> do
+                      liftEffect do Ref.write Nothing fiberRef
+                      case cmd of
+                        Redirect route' -> liftEffect do redirect route'
+                        Override route' -> finalise route'
+                        Continue -> finalise route
+                      mempty
+          Ref.write (Just fiber) fiberRef
+      component <-
+        React.component "Wire.Router" \_ -> React.do
+          React.useEffectOnce do onPushState runRouter
+          pure React.empty
+      pure { signal: Signal.distinct signal, component: component unit, navigate, redirect }

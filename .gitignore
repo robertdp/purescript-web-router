@@ -2,7 +2,10 @@
 /node_modules/
 /.pulp-cache/
 /output/
-/generated-docs/
+/generated-docs/*
+!/generated-docs/md/
+/generated-docs/md/*
+!/generated-docs/md/Wire.React.Router.*
 /.psc-package/
 /.psc*
 /.purs*
