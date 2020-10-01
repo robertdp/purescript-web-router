@@ -49,7 +49,6 @@ makeRouter { interface, initial, decode, encode, onRouteChange } =
       fiberRef <- Ref.new Nothing
       previousRouteRef <- Ref.new Nothing
       let
-        runRouter :: route -> Effect Unit
         runRouter route = do
           Ref.read fiberRef >>= traverse_ (launchAff_ <<< killFiber (error "Transition cancelled"))
           previousRoute <- Ref.read previousRouteRef
