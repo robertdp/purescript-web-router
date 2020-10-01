@@ -22,9 +22,8 @@ import Wire.Signal (Signal)
 import Wire.Signal as Signal
 
 makeRouter ::
-  forall route f m.
+  forall route f.
   Foldable f =>
-  MonadEffect m =>
   { interface :: PushStateInterface
   , initial :: route
   , decode :: String -> f route
