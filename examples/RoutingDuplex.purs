@@ -59,7 +59,7 @@ makeApp = do
       Wire.useSignal router.signal
     pure
       $ React.fragment
-          [ -- the router subscriber to pushstate events when this component is mounted, and unsubscribes when unmounted
+          [ -- the router subscribes to pushstate events when this component is mounted, and unsubscribes when unmounted
             router.component
           , R.h1_
               [ R.text case Lens.view _Route route of
