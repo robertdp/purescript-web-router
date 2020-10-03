@@ -2,11 +2,11 @@
 Welcome to a Spago project!
 You can edit this file as you like.
 -}
-{ name = "my-project"
+{ name = "wire-react-router"
 , dependencies =
   [ "aff"
-  , "indexed-monad"
   , "freet"
+  , "indexed-monad"
   , "profunctor-lenses"
   , "react-basic-hooks"
   , "routing"

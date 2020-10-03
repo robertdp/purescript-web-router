@@ -5,7 +5,7 @@ module Wire.React.Router
 
 import Prelude
 import Control.Monad.Free.Trans (runFreeT)
-import Data.Foldable (class Foldable, for_, traverse_)
+import Data.Foldable (class Foldable, for_)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (error, killFiber, launchAff, launchAff_)
@@ -21,40 +21,47 @@ import Wire.React.Router.Control (Command, Resolved, Route(..), Router, Transiti
 import Wire.Signal (Signal)
 import Wire.Signal as Signal
 
-makeRouter ::
-  forall route f.
-  Foldable f =>
-  { interface :: PushStateInterface
-  , default :: route
-  , decode :: String -> f route
-  , encode :: route -> String
-  , onRouteChange :: route -> Router route Transitioning Resolved Unit
-  } ->
-  Effect
-    { signal :: Signal (Route route)
+type Interface route
+  = { signal :: Signal (Route route)
     , component :: JSX
     , navigate :: route -> Effect Unit
     , redirect :: route -> Effect Unit
     }
-makeRouter { interface, default, decode, encode, onRouteChange } =
+
+makeRouter ::
+  forall f route.
+  Foldable f =>
+  { interface :: PushStateInterface
+  , fallback :: route
+  , parse :: String -> f route
+  , print :: route -> String
+  , onRoute :: route -> Router route Transitioning Resolved Unit
+  } ->
+  Effect (Interface route)
+makeRouter { interface, fallback, parse, print, onRoute } =
   let
-    onPushState k = PushState.matchesWith decode (\_ -> k) interface
+    onPushState k = PushState.matchesWith parse (\_ -> k) interface
 
-    navigate route = interface.pushState (unsafeToForeign {}) (encode route)
+    navigate route = interface.pushState (unsafeToForeign {}) (print route)
 
-    redirect route = interface.replaceState (unsafeToForeign {}) (encode route)
+    redirect route = interface.replaceState (unsafeToForeign {}) (print route)
   in
     do
-      { modify, signal } <- Signal.create (Transitioning Nothing default)
-      -- replace the user-supplied default route with the current route, if possible
-      interface.locationState >>= \{ path } -> for_ (decode path) \route -> modify \_ -> Transitioning Nothing route
+      { modify, signal } <- Signal.create (Transitioning Nothing fallback)
+      do
+        -- replace the user-supplied fallback route with the current route, if possible
+        { path } <- interface.locationState
+        for_ (parse path) \route -> modify \_ -> Transitioning Nothing route
       fiberRef <- Ref.new Nothing
       previousRouteRef <- Ref.new Nothing
       let
         runRouter route = do
-          -- if some previous long-running routing logic is still active, kill it
-          Ref.read fiberRef >>= traverse_ (launchAff_ <<< killFiber (error "Transition cancelled"))
+          do
+            -- if some previous long-running routing logic is still active, kill it
+            oldFiber <- Ref.read fiberRef
+            for_ oldFiber \fiber -> launchAff_ (killFiber (error "Transition cancelled") fiber)
           previousRoute <- Ref.read previousRouteRef
+          -- set the route state to "transitioning" with the previous successful route
           modify \_ -> Transitioning previousRoute route
           let
             finalise r =
@@ -62,7 +69,7 @@ makeRouter { interface, default, decode, encode, onRouteChange } =
                 Ref.write (Just r) previousRouteRef
                 modify \_ -> Resolved previousRoute r
           fiber <-
-            launchAff case onRouteChange route of
+            launchAff case onRoute route of
               Router router ->
                 router
                   # runFreeT \cmd -> do
@@ -75,6 +82,6 @@ makeRouter { interface, default, decode, encode, onRouteChange } =
           Ref.write (Just fiber) fiberRef
       component <-
         React.component "Wire.Router" \_ -> React.do
-          React.useEffectOnce do onPushState runRouter
+          React.useEffectOnce (onPushState runRouter)
           pure React.empty
       pure { signal, component: component unit, navigate, redirect }
