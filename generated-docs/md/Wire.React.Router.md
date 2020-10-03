@@ -3,7 +3,7 @@
 #### `makeRouter`
 
 ``` purescript
-makeRouter :: forall route f. Foldable f => { decode :: String -> f route, default :: route, encode :: route -> String, interface :: PushStateInterface, onRouteChange :: route -> Router route Transitioning Resolved Unit } -> Effect { component :: JSX, navigate :: route -> Effect Unit, redirect :: route -> Effect Unit, signal :: Signal (Route route) }
+makeRouter :: forall f route. Foldable f => { fallback :: route, interface :: PushStateInterface, onRoute :: route -> Router route Transitioning Resolved Unit, parse :: String -> f route, print :: route -> String } -> Effect (Interface route)
 ```
 
 
