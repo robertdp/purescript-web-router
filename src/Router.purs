@@ -31,14 +31,14 @@ type Interface route
 makeRouter ::
   forall f route.
   Foldable f =>
-  { interface :: PushStateInterface
-  , fallback :: route
+  PushStateInterface ->
+  { fallback :: route
   , parse :: String -> f route
   , print :: route -> String
   , onRoute :: route -> Router route Transitioning Resolved Unit
   } ->
   Effect (Interface route)
-makeRouter { interface, fallback, parse, print, onRoute } =
+makeRouter interface { fallback, parse, print, onRoute } =
   let
     onPushState k = PushState.matchesWith parse (\_ -> k) interface
 

@@ -6,8 +6,8 @@ A basic pushstate router for React, with support for asynchronous routing logic.
 makeRouter ::
   forall route f.
   Foldable f =>
-  { interface :: PushStateInterface
-  , fallback :: route
+  PushStateInterface ->
+  { fallback :: route
   , parse :: String -> f route
   , print :: route -> String
   , onRoute :: route -> Router route Transitioning Resolved Unit

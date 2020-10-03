@@ -42,9 +42,8 @@ makeApp :: Effect (Unit -> JSX)
 makeApp = do
   interface <- PushState.makeInterface
   router <-
-    Router.makeRouter
-      { interface
-      , fallback:
+    Router.makeRouter interface
+      { fallback:
           -- used as the initial route if the parser fails
           NotFound
       , parse: parse routes
