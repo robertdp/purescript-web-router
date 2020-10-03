@@ -50,9 +50,8 @@ makeApp = do
       , parse: parse routes
       , print: print routes
       , onRoute:
-          \_ ->
-            -- this skips any async routing logic by accepting the parsed route immediately
-            Router.continue
+          -- this skips any async routing logic by accepting the parsed route immediately
+          \route -> Router.continue
       }
   React.component "App" \props -> React.do
     route <-
