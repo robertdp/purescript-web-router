@@ -1,5 +1,6 @@
 module Wire.React.Router
   ( module Control
+  , Interface
   , makeRouter
   ) where
 
