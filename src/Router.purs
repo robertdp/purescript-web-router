@@ -19,12 +19,6 @@ import Routing.PushState as PushState
 import Wire.React.Router.Control (Command(..), Resolved, Router(..), Transition(..), Transitioning)
 import Wire.React.Router.Control (Command, Resolved, Router, Transition(..), Transitioning, _Resolved, _Transition, _Transitioning, continue, isResolved, isTransitioning, override, redirect) as Control
 
-type Interface route
-  = { component :: JSX
-    , navigate :: route -> Effect Unit
-    , redirect :: route -> Effect Unit
-    }
-
 makeRouter ::
   forall f route.
   Foldable f =>
@@ -34,7 +28,11 @@ makeRouter ::
   , onRoute :: route -> Router route Transitioning Resolved Unit
   , onTransition :: Transition route -> Effect Unit
   } ->
-  Effect (Interface route)
+  Effect
+    { component :: JSX
+    , navigate :: route -> Effect Unit
+    , redirect :: route -> Effect Unit
+    }
 makeRouter interface { parse, print, onRoute, onTransition } =
   let
     onPushState k = PushState.matchesWith parse (\_ -> k) interface
