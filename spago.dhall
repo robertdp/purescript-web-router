@@ -10,7 +10,6 @@ You can edit this file as you like.
   , "profunctor-lenses"
   , "react-basic-hooks"
   , "routing"
-  , "wire"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
