@@ -20,3 +20,27 @@ makeRouter ::
 ```
 
 For a basic example see [`examples/RoutingDuplex.purs`](https://github.com/robertdp/purescript-wire-react-router/blob/master/examples/RoutingDuplex.purs).
+
+## How to use with Spago
+
+Add `wire-react-router` to your `packages.dhall`:
+
+```dhall
+let additions =
+  { wire-react-router =
+      { dependencies =
+          [ "aff"
+          , "freet"
+          , "indexed-monad"
+          , "profunctor-lenses"
+          , "react-basic-hooks"
+          , "routing"
+          ]
+      , repo = "https://github.com/robertdp/purescript-wire-react-router.git"
+      , version = "v0.2.1"
+      }
+  }
+```
+
+And then install with
+`$ spago install wire-react-router`
