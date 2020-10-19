@@ -59,7 +59,7 @@ makeApp = do
   React.component "App" \props -> React.do
     route <-
       -- subscribe to the signal containing the current route
-      Wire.useSignal router.signal
+      Wire.useSignal routeSignal
     pure
       $ React.fragment
           [ -- the router subscribes to pushstate events when this component is mounted, and unsubscribes when unmounted
