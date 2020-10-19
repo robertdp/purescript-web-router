@@ -5,7 +5,7 @@ module Wire.React.Router
 
 import Prelude
 import Control.Monad.Free.Trans (runFreeT)
-import Data.Foldable (class Foldable, for_)
+import Data.Foldable (class Foldable, traverse_)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (error, killFiber, launchAff, launchAff_)
@@ -42,17 +42,12 @@ makeRouter interface { parse, print, onRoute, onTransition } =
     redirect route = interface.replaceState (unsafeToForeign {}) (print route)
   in
     do
-      -- replace the user-supplied fallback route with the current route, if possible
-      { path } <- interface.locationState
-      for_ (parse path) \route -> onTransition $ Transitioning Nothing route
       fiberRef <- Ref.new Nothing
       previousRouteRef <- Ref.new Nothing
       let
         runRouter route = do
-          do
-            -- if some previous long-running routing logic is still active, kill it
-            oldFiber <- Ref.read fiberRef
-            for_ oldFiber \fiber -> launchAff_ (killFiber (error "Transition cancelled") fiber)
+          -- if some previous long-running routing logic is still active, kill it
+          Ref.read fiberRef >>= traverse_ (launchAff_ <<< killFiber (error "Transition cancelled"))
           previousRoute <- Ref.read previousRouteRef
           -- set the route state to "transitioning" with the previous successful route
           onTransition $ Transitioning previousRoute route
@@ -73,6 +68,9 @@ makeRouter interface { parse, print, onRoute, onTransition } =
                         Continue -> finalise route
                       mempty
           Ref.write (Just fiber) fiberRef
+      -- run on the current path
+      { path } <- interface.locationState
+      traverse_ runRouter (parse path)
       component <-
         React.component "Wire.Router" \_ -> React.do
           React.useEffectOnce (onPushState runRouter)
