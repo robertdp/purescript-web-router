@@ -74,5 +74,5 @@ makeRouter interface { parse, print, onRoute, onTransition } =
       component <-
         React.component "Wire.Router" \_ -> React.do
           React.useEffectOnce (onPushState runRouter)
-          pure React.empty
+          mempty
       pure { component: component unit, navigate, redirect }
