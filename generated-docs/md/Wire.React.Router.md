@@ -3,7 +3,7 @@
 #### `makeRouter`
 
 ``` purescript
-makeRouter :: forall f route. Foldable f => PushStateInterface -> { fallback :: route, onRoute :: route -> Router route Transitioning Resolved Unit, parse :: String -> f route, print :: route -> String } -> Effect (Interface route)
+makeRouter :: forall f route. Foldable f => PushStateInterface -> { onRoute :: route -> Router route Transitioning Resolved Unit, onTransition :: Transition route -> Effect Unit, parse :: String -> f route, print :: route -> String } -> Effect { component :: JSX, navigate :: route -> Effect Unit, redirect :: route -> Effect Unit }
 ```
 
 
@@ -13,6 +13,19 @@ makeRouter :: forall f route. Foldable f => PushStateInterface -> { fallback :: 
 
 ``` purescript
 data Transitioning
+```
+
+#### `Transition`
+
+``` purescript
+data Transition route
+  = Transitioning (Maybe route) route
+  | Resolved (Maybe route) route
+```
+
+##### Instances
+``` purescript
+(Eq route) => Eq (Transition route)
 ```
 
 #### `Router`
@@ -36,19 +49,6 @@ IxMonad (Router route)
 (TypeEquals Transitioning i, TypeEquals i o) => Monad (Router route i o)
 (TypeEquals Transitioning i, TypeEquals i o) => MonadEffect (Router route i o)
 (TypeEquals Transitioning i, TypeEquals i o) => MonadAff (Router route i o)
-```
-
-#### `Route`
-
-``` purescript
-data Route route
-  = Transitioning (Maybe route) route
-  | Resolved (Maybe route) route
-```
-
-##### Instances
-``` purescript
-(Eq route) => Eq (Route route)
 ```
 
 #### `Resolved`
@@ -83,13 +83,13 @@ override :: forall route. route -> Router route Transitioning Resolved Unit
 #### `isTransitioning`
 
 ``` purescript
-isTransitioning :: forall route. Route route -> Boolean
+isTransitioning :: forall route. Transition route -> Boolean
 ```
 
 #### `isResolved`
 
 ``` purescript
-isResolved :: forall route. Route route -> Boolean
+isResolved :: forall route. Transition route -> Boolean
 ```
 
 #### `continue`
@@ -101,18 +101,18 @@ continue :: forall route. Router route Transitioning Resolved Unit
 #### `_Transitioning`
 
 ``` purescript
-_Transitioning :: forall route. Prism' (Route route) route
+_Transitioning :: forall route. Prism' (Transition route) route
 ```
 
-#### `_Route`
+#### `_Transition`
 
 ``` purescript
-_Route :: forall route. Lens' (Route route) route
+_Transition :: forall route. Lens' (Transition route) route
 ```
 
 #### `_Resolved`
 
 ``` purescript
-_Resolved :: forall route. Prism' (Route route) route
+_Resolved :: forall route. Prism' (Transition route) route
 ```
 

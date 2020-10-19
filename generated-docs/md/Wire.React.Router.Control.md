@@ -1,46 +1,46 @@
 ## Module Wire.React.Router.Control
 
-#### `Route`
+#### `Transition`
 
 ``` purescript
-data Route route
+data Transition route
   = Transitioning (Maybe route) route
   | Resolved (Maybe route) route
 ```
 
 ##### Instances
 ``` purescript
-(Eq route) => Eq (Route route)
+(Eq route) => Eq (Transition route)
 ```
 
-#### `_Route`
+#### `_Transition`
 
 ``` purescript
-_Route :: forall route. Lens' (Route route) route
+_Transition :: forall route. Lens' (Transition route) route
 ```
 
 #### `_Transitioning`
 
 ``` purescript
-_Transitioning :: forall route. Prism' (Route route) route
+_Transitioning :: forall route. Prism' (Transition route) route
 ```
 
 #### `_Resolved`
 
 ``` purescript
-_Resolved :: forall route. Prism' (Route route) route
+_Resolved :: forall route. Prism' (Transition route) route
 ```
 
 #### `isTransitioning`
 
 ``` purescript
-isTransitioning :: forall route. Route route -> Boolean
+isTransitioning :: forall route. Transition route -> Boolean
 ```
 
 #### `isResolved`
 
 ``` purescript
-isResolved :: forall route. Route route -> Boolean
+isResolved :: forall route. Transition route -> Boolean
 ```
 
 #### `Command`
