@@ -1,12 +1,15 @@
 {-| This example also requires the following dependencies to be installed:
     - react-basic-dom
     - routing-duplex
+    - wire
     - wire-react
 -}
 module Example.RoutingDuplex where
 
 import Prelude hiding ((/))
+import Data.Foldable (for_)
 import Data.Generic.Rep (class Generic)
+import Data.Lens (preview, review)
 import Data.Lens as Lens
 import Effect (Effect)
 import React.Basic.DOM as R
@@ -18,7 +21,6 @@ import Routing.Duplex.Generic (noArgs, sum)
 import Routing.Duplex.Generic.Syntax ((/))
 import Routing.PushState as PushState
 import Wire.React as Wire
-import Wire.React.Router (_Route)
 import Wire.React.Router as Router
 
 data Route
@@ -41,27 +43,29 @@ routes =
 makeApp :: Effect (Unit -> JSX)
 makeApp = do
   interface <- PushState.makeInterface
+  { signal: routeSignal, modify: modifyRouteSignal } <- Signal.create NotFound
   router <-
     Router.makeRouter interface
-      { fallback:
-          -- used as the initial route if the parser fails
-          NotFound
-      , parse: parse routes
+      { parse: parse routes
       , print: print routes
       , onRoute:
           -- this skips any async routing logic by accepting the parsed route immediately
-          \route -> Router.continue
+          const Router.continue
+      , onTransition:
+          case _ of
+            Router.Transitioning _ _ -> pure unit
+            Router.Resolved _ route -> modifyRouteSignal (const route)
       }
   React.component "App" \props -> React.do
     route <-
       -- subscribe to the signal containing the current route
-      Wire.useSignal router.signal
+      Wire.useSignal routeSignal
     pure
       $ React.fragment
           [ -- the router subscribes to pushstate events when this component is mounted, and unsubscribes when unmounted
             router.component
           , R.h1_
-              [ R.text case Lens.view _Route route of
+              [ R.text case route of
                   Home -> "Home"
                   About -> "About"
                   NotFound -> "Not Found"

@@ -11,14 +11,14 @@ import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Type.Equality (class TypeEquals)
 
-data Route route
+data Transition route
   = Transitioning (Maybe route) route
   | Resolved (Maybe route) route
 
-derive instance eqRoute :: Eq route => Eq (Route route)
+derive instance eqRoute :: Eq route => Eq (Transition route)
 
-_Route :: forall route. Lens' (Route route) route
-_Route = lens getter setter
+_Transition :: forall route. Lens' (Transition route) route
+_Transition = lens getter setter
   where
   getter = case _ of
     Transitioning _ route -> route
@@ -28,22 +28,22 @@ _Route = lens getter setter
     Transitioning route _ -> Transitioning route
     Resolved route _ -> Resolved route
 
-_Transitioning :: forall route. Prism' (Route route) route
+_Transitioning :: forall route. Prism' (Transition route) route
 _Transitioning =
   prism' (Transitioning Nothing) case _ of
     Transitioning _ route -> Just route
     _ -> Nothing
 
-_Resolved :: forall route. Prism' (Route route) route
+_Resolved :: forall route. Prism' (Transition route) route
 _Resolved =
   prism' (Resolved Nothing) case _ of
     Resolved _ route -> Just route
     _ -> Nothing
 
-isTransitioning :: forall route. Route route -> Boolean
+isTransitioning :: forall route. Transition route -> Boolean
 isTransitioning = is _Transitioning
 
-isResolved :: forall route. Route route -> Boolean
+isResolved :: forall route. Transition route -> Boolean
 isResolved = is _Resolved
 
 data Command route a

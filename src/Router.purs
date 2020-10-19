@@ -16,29 +16,24 @@ import React.Basic.Hooks (JSX)
 import React.Basic.Hooks as React
 import Routing.PushState (PushStateInterface)
 import Routing.PushState as PushState
-import Wire.React.Router.Control (Command(..), Resolved, Route(..), Router(..), Transitioning)
-import Wire.React.Router.Control (Command, Resolved, Route(..), Router, Transitioning, _Resolved, _Route, _Transitioning, continue, isResolved, isTransitioning, override, redirect) as Control
-import Wire.Signal (Signal)
-import Wire.Signal as Signal
-
-type Interface route
-  = { signal :: Signal (Route route)
-    , component :: JSX
-    , navigate :: route -> Effect Unit
-    , redirect :: route -> Effect Unit
-    }
+import Wire.React.Router.Control (Command(..), Resolved, Router(..), Transition(..), Transitioning)
+import Wire.React.Router.Control (Command, Resolved, Router, Transition(..), Transitioning, _Resolved, _Transition, _Transitioning, continue, isResolved, isTransitioning, override, redirect) as Control
 
 makeRouter ::
   forall f route.
   Foldable f =>
   PushStateInterface ->
-  { fallback :: route
-  , parse :: String -> f route
+  { parse :: String -> f route
   , print :: route -> String
   , onRoute :: route -> Router route Transitioning Resolved Unit
+  , onTransition :: Transition route -> Effect Unit
   } ->
-  Effect (Interface route)
-makeRouter interface { fallback, parse, print, onRoute } =
+  Effect
+    { component :: JSX
+    , navigate :: route -> Effect Unit
+    , redirect :: route -> Effect Unit
+    }
+makeRouter interface { parse, print, onRoute, onTransition } =
   let
     onPushState k = PushState.matchesWith parse (\_ -> k) interface
 
@@ -47,11 +42,9 @@ makeRouter interface { fallback, parse, print, onRoute } =
     redirect route = interface.replaceState (unsafeToForeign {}) (print route)
   in
     do
-      { modify, signal } <- Signal.create (Transitioning Nothing fallback)
-      do
-        -- replace the user-supplied fallback route with the current route, if possible
-        { path } <- interface.locationState
-        for_ (parse path) \route -> modify \_ -> Transitioning Nothing route
+      -- replace the user-supplied fallback route with the current route, if possible
+      { path } <- interface.locationState
+      for_ (parse path) \route -> onTransition $ Transitioning Nothing route
       fiberRef <- Ref.new Nothing
       previousRouteRef <- Ref.new Nothing
       let
@@ -62,12 +55,12 @@ makeRouter interface { fallback, parse, print, onRoute } =
             for_ oldFiber \fiber -> launchAff_ (killFiber (error "Transition cancelled") fiber)
           previousRoute <- Ref.read previousRouteRef
           -- set the route state to "transitioning" with the previous successful route
-          modify \_ -> Transitioning previousRoute route
+          onTransition $ Transitioning previousRoute route
           let
             finalise r =
               liftEffect do
                 Ref.write (Just r) previousRouteRef
-                modify \_ -> Resolved previousRoute r
+                onTransition $ Resolved previousRoute r
           fiber <-
             launchAff case onRoute route of
               Router router ->
@@ -84,4 +77,4 @@ makeRouter interface { fallback, parse, print, onRoute } =
         React.component "Wire.Router" \_ -> React.do
           React.useEffectOnce (onPushState runRouter)
           pure React.empty
-      pure { signal, component: component unit, navigate, redirect }
+      pure { component: component unit, navigate, redirect }
