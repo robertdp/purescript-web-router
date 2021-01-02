@@ -7,10 +7,7 @@
 module Example.RoutingDuplex where
 
 import Prelude hiding ((/))
-import Data.Foldable (for_)
 import Data.Generic.Rep (class Generic)
-import Data.Lens (preview, review)
-import Data.Lens as Lens
 import Effect (Effect)
 import React.Basic.DOM as R
 import React.Basic.Events (handler_)
@@ -22,6 +19,7 @@ import Routing.Duplex.Generic.Syntax ((/))
 import Routing.PushState as PushState
 import Wire.React as Wire
 import Wire.React.Router as Router
+import Wire.Signal as Signal
 
 data Route
   = Home

@@ -19,7 +19,7 @@ makeRouter ::
     }
 ```
 
-For a basic example see [`examples/RoutingDuplex.purs`](https://github.com/robertdp/purescript-wire-react-router/blob/master/examples/RoutingDuplex.purs).
+For a basic example see [`examples/RoutingDuplex.purs`](https://github.com/robertdp/purescript-wire-react-router/blob/master/examples/RoutingDuplex.purs): `$ spago build --config examples.dhall`
 
 ## How to use with Spago
 
@@ -44,3 +44,4 @@ let additions =
 
 And then install with
 `$ spago install wire-react-router`
+

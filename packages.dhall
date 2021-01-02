@@ -119,10 +119,23 @@ let additions =
 
 
 let upstream =
-      https://github.com/purescript/package-sets/releases/download/psc-0.13.8-20200922/packages.dhall sha256:5edc9af74593eab8834d7e324e5868a3d258bbab75c5531d2eb770d4324a2900
+      https://github.com/purescript/package-sets/releases/download/psc-0.13.8-20201223/packages.dhall sha256:a1a8b096175f841c4fef64c9b605fb0d691229241fd2233f6cf46e213de8a185
 
 let overrides = {=}
 
-let additions = {=}
+let additions =
+  { wire-react =
+      { dependencies =
+          [ "wire"
+          , "free"
+          , "freet"
+          , "react-basic-hooks"
+          ]
+      , repo =
+          "https://github.com/robertdp/purescript-wire-react.git"
+      , version =
+          "v0.0.1"
+      }
+  }
 
 in  upstream // overrides // additions
