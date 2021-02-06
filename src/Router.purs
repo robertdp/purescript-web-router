@@ -68,9 +68,6 @@ makeRouter interface { parse, print, onRoute, onTransition } =
                         Continue -> finalise route
                       mempty
           Ref.write (Just fiber) fiberRef
-      -- run on the current path
-      { path } <- interface.locationState
-      traverse_ runRouter (parse path)
       component <-
         React.component "Wire.Router" \_ -> React.do
           React.useEffectOnce (onPushState runRouter)
