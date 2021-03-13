@@ -8,7 +8,7 @@ import Routing.Hash as Hash
 import Web.Router as Router
 import Web.Router.Types (Driver(..), Event, Resolved, Transition, Transitioning, Router)
 
-makeDriver :: forall f o i. Foldable f => (String -> f o) -> (i -> String) -> Driver i o
+makeDriver :: forall f i o. Foldable f => (String -> f i) -> (o -> String) -> Driver i o
 makeDriver parser printer =
   Driver
     { initialize: Hash.matchesWith parser <<< const
@@ -19,11 +19,11 @@ makeDriver parser printer =
 makeRouter ::
   forall f i o.
   Foldable f =>
-  (String -> f o) ->
-  (i -> String) ->
-  (Maybe o -> o -> Transition i o Transitioning Resolved Unit) ->
-  (Event o -> Effect Unit) ->
-  Effect (Router i)
+  (String -> f i) ->
+  (o -> String) ->
+  (Maybe i -> i -> Transition i o Transitioning Resolved Unit) ->
+  (Event i -> Effect Unit) ->
+  Effect (Router o)
 makeRouter parser printer onTransition onEvent = do
   let
     driver = makeDriver parser printer

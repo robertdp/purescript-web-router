@@ -12,10 +12,10 @@ import Web.Router.Types (Command(..), Driver(..), Event(..), Resolved, Router, T
 
 makeRouter ::
   forall i o.
-  (Maybe o -> o -> Transition i o Transitioning Resolved Unit) ->
-  (Event o -> Effect Unit) ->
+  (Maybe i -> i -> Transition i o Transitioning Resolved Unit) ->
+  (Event i -> Effect Unit) ->
   Driver i o ->
-  Effect (Router i)
+  Effect (Router o)
 makeRouter onTransition onEvent (Driver driver) = do
   fiberRef <- Ref.new (pure unit)
   previousRouteRef <- Ref.new Nothing
@@ -45,11 +45,11 @@ makeRouter onTransition onEvent (Driver driver) = do
       Ref.write fiber fiberRef
   pure { initialize: driver.initialize runRouter, navigate: driver.navigate, redirect: driver.redirect }
 
-redirect :: forall i o. i -> Transition i o Transitioning Resolved Unit
-redirect route = Transition (liftFreeT (Redirect route))
-
-override :: forall i o. o -> Transition i o Transitioning Resolved Unit
+override :: forall i o. i -> Transition i o Transitioning Resolved Unit
 override route = Transition (liftFreeT (Override route))
+
+redirect :: forall i o. o -> Transition i o Transitioning Resolved Unit
+redirect route = Transition (liftFreeT (Redirect route))
 
 continue :: forall i o. Transition i o Transitioning Resolved Unit
 continue = Transition (liftFreeT Continue)

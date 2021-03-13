@@ -20,9 +20,9 @@ type Router route
 newtype Driver :: Type -> Type -> Type
 newtype Driver i o
   = Driver
-  { initialize :: (o -> Effect Unit) -> Effect (Effect Unit)
-  , navigate :: i -> Effect Unit
-  , redirect :: i -> Effect Unit
+  { initialize :: (i -> Effect Unit) -> Effect (Effect Unit)
+  , navigate :: o -> Effect Unit
+  , redirect :: o -> Effect Unit
   }
 
 type Driver' route
@@ -36,8 +36,8 @@ derive instance eqRoute :: Eq route => Eq (Event route)
 
 data Command :: Type -> Type -> Type -> Type
 data Command i o a
-  = Redirect i
-  | Override o
+  = Override i
+  | Redirect o
   | Continue
 
 derive instance functorCommand :: Functor (Command i o)
