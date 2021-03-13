@@ -1,4 +1,4 @@
-module Routing.Router.Driver.PushState where
+module Web.Router.Driver.PushState where
 
 import Prelude
 import Data.Foldable (class Foldable)
@@ -6,7 +6,7 @@ import Effect (Effect)
 import Foreign (unsafeToForeign)
 import Routing.PushState (PushStateInterface)
 import Routing.PushState as PushState
-import Routing.Router.Types (Driver(..))
+import Web.Router.Types (Driver(..))
 
 makeDriver :: forall f i o. Foldable f => (String -> f o) -> (i -> String) -> Effect (Driver i o)
 makeDriver parser printer = makeDriver_ parser printer <$> PushState.makeInterface

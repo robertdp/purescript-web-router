@@ -1,4 +1,4 @@
-module Routing.Router.Types where
+module Web.Router.Types where
 
 import Prelude
 import Control.Monad.Free.Trans (FreeT)

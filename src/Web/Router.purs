@@ -9,7 +9,7 @@ import Effect (Effect)
 import Effect.Aff (error, killFiber, launchAff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Ref as Ref
-import Routing.Router.Types (Command(..), Driver(..), Resolved, Router(..), Transition(..), Transitioning)
+import Web.Router.Types (Command(..), Driver(..), Resolved, Router(..), Transition(..), Transitioning)
 
 makeRouter ::
   forall f i o.

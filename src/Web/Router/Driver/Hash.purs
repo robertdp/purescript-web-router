@@ -1,9 +1,9 @@
-module Routing.Router.Driver.Hash where
+module Web.Router.Driver.Hash where
 
 import Prelude
 import Data.Foldable (class Foldable)
 import Routing.Hash as Hash
-import Routing.Router.Types (Driver(..))
+import Web.Router.Types (Driver(..))
 
 makeDriver :: forall f o i. Foldable f => (String -> f o) -> (i -> String) -> Driver i o
 makeDriver parser printer =
