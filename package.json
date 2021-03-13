@@ -1,5 +1,5 @@
 {
-  "name": "purescript-wire-react-routing",
+  "name": "purescript-web-router",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
