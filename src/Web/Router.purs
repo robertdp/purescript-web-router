@@ -9,7 +9,7 @@ import Effect (Effect)
 import Effect.Aff (error, killFiber, launchAff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Ref as Ref
-import Web.Router.Types (Command(..), Driver(..), Resolved, Router(..), Transition(..), Transitioning)
+import Web.Router.Types (Command(..), Driver(..), Resolved, Router(..), Transition(..), Transitioning, RouterIO)
 
 makeRouter ::
   forall f i o.
@@ -17,11 +17,7 @@ makeRouter ::
   Driver i o ->
   (Transition o -> Effect Unit) ->
   (o -> Router i o Transitioning Resolved Unit) ->
-  Effect
-    { initialize :: Effect (Effect Unit)
-    , navigate :: i -> Effect Unit
-    , redirect :: i -> Effect Unit
-    }
+  Effect (RouterIO i)
 makeRouter (Driver driver) onTransition onRoute = do
   fiberRef <- Ref.new (pure unit)
   previousRouteRef <- Ref.new Nothing

@@ -22,6 +22,12 @@ newtype Driver i o
 type Driver' route
   = Driver route route
 
+type RouterIO route
+  = { initialize :: Effect (Effect Unit)
+    , navigate :: route -> Effect Unit
+    , redirect :: route -> Effect Unit
+    }
+
 data Transition route
   = Transitioning (Maybe route) route
   | Resolved (Maybe route) route
