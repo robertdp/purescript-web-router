@@ -2,23 +2,19 @@ module Routing.Router where
 
 import Prelude
 import Control.Monad.Free.Trans (liftFreeT, runFreeT)
-import Data.Foldable (class Foldable)
 import Data.Lens (Lens', Prism', is, lens, prism')
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (error, killFiber, launchAff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Ref as Ref
-import Web.Router.Types (Command(..), Driver(..), Event(..), Resolved, Router, Transition(..), Transitioning)
+import Web.Router.Types (Command(..), Driver(..), Event(..), Resolved, Router, Transition(..), Transitioning, RouterSpec)
 
 makeRouter ::
-  forall f i o.
-  Foldable f =>
-  Driver i o ->
-  (Event o -> Effect Unit) ->
-  (o -> Transition i o Transitioning Resolved Unit) ->
+  forall i o.
+  RouterSpec i o ->
   Effect (Router i)
-makeRouter (Driver driver) onTransition onRoute = do
+makeRouter { driver: Driver driver, onEvent, onTransition } = do
   fiberRef <- Ref.new (pure unit)
   previousRouteRef <- Ref.new Nothing
   let
@@ -28,14 +24,14 @@ makeRouter (Driver driver) onTransition onRoute = do
       launchAff_ (killFiber (error "Transition cancelled") oldFiber)
       -- run the supplied `onTransition` effect with the previous route
       previousRoute <- Ref.read previousRouteRef
-      onTransition (Transitioning previousRoute route)
+      onEvent (Transitioning previousRoute route)
       let
         finalise r =
           liftEffect do
             Ref.write (Just r) previousRouteRef
-            onTransition $ Resolved previousRoute r
+            onEvent $ Resolved previousRoute r
       fiber <-
-        launchAff case onRoute route of
+        launchAff case onTransition previousRoute route of
           Transition router ->
             router
               # runFreeT \cmd -> do

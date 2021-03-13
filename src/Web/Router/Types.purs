@@ -11,6 +11,18 @@ import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Type.Equality (class TypeEquals)
 
+type RouterSpec i o
+  = { driver :: Driver i o
+    , onEvent :: Event o -> Effect Unit
+    , onTransition :: Maybe o -> o -> Transition i o Transitioning Resolved Unit
+    }
+
+type Router route
+  = { initialize :: Effect (Effect Unit)
+    , navigate :: route -> Effect Unit
+    , redirect :: route -> Effect Unit
+    }
+
 newtype Driver :: Type -> Type -> Type
 newtype Driver i o
   = Driver
@@ -21,12 +33,6 @@ newtype Driver i o
 
 type Driver' route
   = Driver route route
-
-type Router route
-  = { initialize :: Effect (Effect Unit)
-    , navigate :: route -> Effect Unit
-    , redirect :: route -> Effect Unit
-    }
 
 data Event route
   = Transitioning (Maybe route) route
