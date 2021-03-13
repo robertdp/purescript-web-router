@@ -66,22 +66,22 @@ instance ixBindTransition :: IxBind (Transition i o) where
 
 instance ixMonadTransition :: IxMonad (Transition i o)
 
-instance functorTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Functor (Transition i o x y) where
+instance functorTransition :: (TypeEquals Transitioning x, TypeEquals x y) => Functor (Transition i o x y) where
   map f (Transition router) = Transition (map f router)
 
-instance applyTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Apply (Transition i o x y) where
+instance applyTransition :: (TypeEquals Transitioning x, TypeEquals x y) => Apply (Transition i o x y) where
   apply = ap
 
-instance applicativeTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Applicative (Transition i o x y) where
+instance applicativeTransition :: (TypeEquals Transitioning x, TypeEquals x y) => Applicative (Transition i o x y) where
   pure a = Transition (pure a)
 
-instance bindTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Bind (Transition i o x y) where
+instance bindTransition :: (TypeEquals Transitioning x, TypeEquals x y) => Bind (Transition i o x y) where
   bind (Transition router) f = Transition (router >>= \a -> case f a of Transition next -> next)
 
-instance monadTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Monad (Transition i o x y)
+instance monadTransition :: (TypeEquals Transitioning x, TypeEquals x y) => Monad (Transition i o x y)
 
-instance monadEffectTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => MonadEffect (Transition i o x y) where
+instance monadEffectTransition :: (TypeEquals Transitioning x, TypeEquals x y) => MonadEffect (Transition i o x y) where
   liftEffect eff = Transition (liftEffect eff)
 
-instance monadAffTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => MonadAff (Transition i o x y) where
+instance monadAffTransition :: (TypeEquals Transitioning x, TypeEquals x y) => MonadAff (Transition i o x y) where
   liftAff aff = Transition (liftAff aff)
