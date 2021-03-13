@@ -1,4 +1,4 @@
-module Routing.Router where
+module Web.Router where
 
 import Prelude
 import Control.Monad.Free.Trans (liftFreeT, runFreeT)
@@ -8,13 +8,16 @@ import Effect (Effect)
 import Effect.Aff (error, killFiber, launchAff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Ref as Ref
-import Web.Router.Types (Command(..), Driver(..), Event(..), Resolved, Router, Transition(..), Transitioning, RouterSpec)
+import Web.Router.Types (Command(..), Driver(..), Event(..), Resolved, Router, Transition(..), Transitioning)
 
-makeRouter ::
-  forall i o.
-  RouterSpec i o ->
-  Effect (Router i)
-makeRouter { driver: Driver driver, onEvent, onTransition } = do
+type RouterSpec i o
+  = { driver :: Driver i o
+    , onTransition :: Maybe o -> o -> Transition i o Transitioning Resolved Unit
+    , onEvent :: Event o -> Effect Unit
+    }
+
+makeRouter :: forall i o. RouterSpec i o -> Effect (Router i)
+makeRouter { driver: Driver driver, onTransition, onEvent } = do
   fiberRef <- Ref.new (pure unit)
   previousRouteRef <- Ref.new Nothing
   let
