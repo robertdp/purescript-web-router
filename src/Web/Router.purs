@@ -9,15 +9,15 @@ import Effect (Effect)
 import Effect.Aff (error, killFiber, launchAff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Ref as Ref
-import Web.Router.Types (Command(..), Driver(..), Resolved, Router(..), Transition(..), Transitioning, RouterIO)
+import Web.Router.Types (Command(..), Driver(..), Event(..), Resolved, Router, Transition(..), Transitioning)
 
 makeRouter ::
   forall f i o.
   Foldable f =>
   Driver i o ->
-  (Transition o -> Effect Unit) ->
-  (o -> Router i o Transitioning Resolved Unit) ->
-  Effect (RouterIO i)
+  (Event o -> Effect Unit) ->
+  (o -> Transition i o Transitioning Resolved Unit) ->
+  Effect (Router i)
 makeRouter (Driver driver) onTransition onRoute = do
   fiberRef <- Ref.new (pure unit)
   previousRouteRef <- Ref.new Nothing
@@ -36,7 +36,7 @@ makeRouter (Driver driver) onTransition onRoute = do
             onTransition $ Resolved previousRoute r
       fiber <-
         launchAff case onRoute route of
-          Router router ->
+          Transition router ->
             router
               # runFreeT \cmd -> do
                   case cmd of
@@ -47,17 +47,17 @@ makeRouter (Driver driver) onTransition onRoute = do
       Ref.write fiber fiberRef
   pure { initialize: driver.initialize runRouter, navigate: driver.navigate, redirect: driver.redirect }
 
-redirect :: forall i o. i -> Router i o Transitioning Resolved Unit
-redirect route = Router (liftFreeT (Redirect route))
+redirect :: forall i o. i -> Transition i o Transitioning Resolved Unit
+redirect route = Transition (liftFreeT (Redirect route))
 
-override :: forall i o. o -> Router i o Transitioning Resolved Unit
-override route = Router (liftFreeT (Override route))
+override :: forall i o. o -> Transition i o Transitioning Resolved Unit
+override route = Transition (liftFreeT (Override route))
 
-continue :: forall i o. Router i o Transitioning Resolved Unit
-continue = Router (liftFreeT Continue)
+continue :: forall i o. Transition i o Transitioning Resolved Unit
+continue = Transition (liftFreeT Continue)
 
-_Transition :: forall route. Lens' (Transition route) route
-_Transition = lens getter setter
+_Event :: forall route. Lens' (Event route) route
+_Event = lens getter setter
   where
   getter = case _ of
     Transitioning _ route -> route
@@ -67,20 +67,20 @@ _Transition = lens getter setter
     Transitioning route _ -> Transitioning route
     Resolved route _ -> Resolved route
 
-_Transitioning :: forall route. Prism' (Transition route) route
+_Transitioning :: forall route. Prism' (Event route) route
 _Transitioning =
   prism' (Transitioning Nothing) case _ of
     Transitioning _ route -> Just route
     _ -> Nothing
 
-_Resolved :: forall route. Prism' (Transition route) route
+_Resolved :: forall route. Prism' (Event route) route
 _Resolved =
   prism' (Resolved Nothing) case _ of
     Resolved _ route -> Just route
     _ -> Nothing
 
-isTransitioning :: forall route. Transition route -> Boolean
+isTransitioning :: forall route. Event route -> Boolean
 isTransitioning = is _Transitioning
 
-isResolved :: forall route. Transition route -> Boolean
+isResolved :: forall route. Event route -> Boolean
 isResolved = is _Resolved

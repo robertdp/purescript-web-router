@@ -22,17 +22,17 @@ newtype Driver i o
 type Driver' route
   = Driver route route
 
-type RouterIO route
+type Router route
   = { initialize :: Effect (Effect Unit)
     , navigate :: route -> Effect Unit
     , redirect :: route -> Effect Unit
     }
 
-data Transition route
+data Event route
   = Transitioning (Maybe route) route
   | Resolved (Maybe route) route
 
-derive instance eqRoute :: Eq route => Eq (Transition route)
+derive instance eqRoute :: Eq route => Eq (Event route)
 
 data Command :: Type -> Type -> Type -> Type
 data Command i o a
@@ -46,42 +46,42 @@ data Transitioning
 
 data Resolved
 
-newtype Router :: forall k1 k2. Type -> Type -> k1 -> k2 -> Type -> Type
-newtype Router i o x y a
-  = Router (FreeT (Command i o) Aff a)
+newtype Transition :: forall k1 k2. Type -> Type -> k1 -> k2 -> Type -> Type
+newtype Transition i o x y a
+  = Transition (FreeT (Command i o) Aff a)
 
-derive instance newtypeRouter :: Newtype (Router i o x y a) _
+derive instance newtypeTransition :: Newtype (Transition i o x y a) _
 
-instance ixFunctorRouter :: IxFunctor (Router i o) where
-  imap f (Router router) = Router (map f router)
+instance ixFunctorTransition :: IxFunctor (Transition i o) where
+  imap f (Transition router) = Transition (map f router)
 
-instance ixApplyRouter :: IxApply (Router i o) where
+instance ixApplyTransition :: IxApply (Transition i o) where
   iapply = iap
 
-instance ixApplicativeRouter :: IxApplicative (Router i o) where
-  ipure a = Router (pure a)
+instance ixApplicativeTransition :: IxApplicative (Transition i o) where
+  ipure a = Transition (pure a)
 
-instance ixBindRouter :: IxBind (Router i o) where
-  ibind (Router router) f = Router (router >>= \a -> case f a of Router next -> next)
+instance ixBindTransition :: IxBind (Transition i o) where
+  ibind (Transition router) f = Transition (router >>= \a -> case f a of Transition next -> next)
 
-instance ixMonadRouter :: IxMonad (Router i o)
+instance ixMonadTransition :: IxMonad (Transition i o)
 
-instance functorRouter :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Functor (Router i o x y) where
-  map f (Router router) = Router (map f router)
+instance functorTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Functor (Transition i o x y) where
+  map f (Transition router) = Transition (map f router)
 
-instance applyRouter :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Apply (Router i o x y) where
+instance applyTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Apply (Transition i o x y) where
   apply = ap
 
-instance applicativeRouter :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Applicative (Router i o x y) where
-  pure a = Router (pure a)
+instance applicativeTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Applicative (Transition i o x y) where
+  pure a = Transition (pure a)
 
-instance bindRouter :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Bind (Router i o x y) where
-  bind (Router router) f = Router (router >>= \a -> case f a of Router next -> next)
+instance bindTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Bind (Transition i o x y) where
+  bind (Transition router) f = Transition (router >>= \a -> case f a of Transition next -> next)
 
-instance monadRouter :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Monad (Router i o x y)
+instance monadTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => Monad (Transition i o x y)
 
-instance monadEffectRouter :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => MonadEffect (Router i o x y) where
-  liftEffect eff = Router (liftEffect eff)
+instance monadEffectTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => MonadEffect (Transition i o x y) where
+  liftEffect eff = Transition (liftEffect eff)
 
-instance monadAffRouter :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => MonadAff (Router i o x y) where
-  liftAff aff = Router (liftAff aff)
+instance monadAffTransition :: (TypeEquals Transitioning x, TypeEquals y Transitioning) => MonadAff (Transition i o x y) where
+  liftAff aff = Transition (liftAff aff)
