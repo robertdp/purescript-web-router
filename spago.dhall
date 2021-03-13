@@ -5,10 +5,11 @@ You can edit this file as you like.
 { name = "wire-react-router"
 , dependencies =
   [ "aff"
+  , "effect"
   , "freet"
   , "indexed-monad"
+  , "prelude"
   , "profunctor-lenses"
-  , "react-basic-hooks"
   , "routing"
   ]
 , packages = ./packages.dhall
