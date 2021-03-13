@@ -21,10 +21,8 @@ makeRouter onTransition onEvent (Driver driver) = do
   previousRouteRef <- Ref.new Nothing
   let
     runRouter route = do
-      -- kill the previous routing logic
       oldFiber <- Ref.read fiberRef
       launchAff_ (killFiber (error "Transition cancelled") oldFiber)
-      -- run the supplied `onTransition` effect with the previous route
       previousRoute <- Ref.read previousRouteRef
       onEvent (Transitioning previousRoute route)
       let
