@@ -42,11 +42,13 @@ data Command i o a
 
 derive instance functorCommand :: Functor (Command i o)
 
-data Transitioning
+data TransitionState
 
-data Resolved
+foreign import data Transitioning :: TransitionState
 
-newtype Transition :: forall k1 k2. Type -> Type -> k1 -> k2 -> Type -> Type
+foreign import data Resolved :: TransitionState
+
+newtype Transition :: Type -> Type -> TransitionState -> TransitionState -> Type -> Type
 newtype Transition i o x y a
   = Transition (FreeT (Command i o) Aff a)
 
