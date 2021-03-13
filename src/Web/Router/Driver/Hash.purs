@@ -16,15 +16,15 @@ makeDriver parser printer =
     , redirect: Hash.setHash <<< printer
     }
 
-type RouterSpec f i o
-  = { parser :: String -> f o
-    , printer :: i -> String
-    , onTransition :: Maybe o -> o -> Transition i o Transitioning Resolved Unit
-    , onEvent :: Event o -> Effect Unit
-    }
-
-makeRouter :: forall f i o. Foldable f => RouterSpec f i o -> Effect (Router i)
-makeRouter { parser, printer, onTransition, onEvent } = do
+makeRouter ::
+  forall f i o.
+  Foldable f =>
+  (String -> f o) ->
+  (i -> String) ->
+  (Maybe o -> o -> Transition i o Transitioning Resolved Unit) ->
+  (Event o -> Effect Unit) ->
+  Effect (Router i)
+makeRouter parser printer onTransition onEvent = do
   let
     driver = makeDriver parser printer
-  Router.makeRouter { driver, onTransition, onEvent }
+  Router.makeRouter onTransition onEvent driver

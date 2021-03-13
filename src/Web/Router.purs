@@ -10,14 +10,13 @@ import Effect.Class (liftEffect)
 import Effect.Ref as Ref
 import Web.Router.Types (Command(..), Driver(..), Event(..), Resolved, Router, Transition(..), Transitioning)
 
-type RouterSpec i o
-  = { driver :: Driver i o
-    , onTransition :: Maybe o -> o -> Transition i o Transitioning Resolved Unit
-    , onEvent :: Event o -> Effect Unit
-    }
-
-makeRouter :: forall i o. RouterSpec i o -> Effect (Router i)
-makeRouter { driver: Driver driver, onTransition, onEvent } = do
+makeRouter ::
+  forall i o.
+  (Maybe o -> o -> Transition i o Transitioning Resolved Unit) ->
+  (Event o -> Effect Unit) ->
+  Driver i o ->
+  Effect (Router i)
+makeRouter onTransition onEvent (Driver driver) = do
   fiberRef <- Ref.new (pure unit)
   previousRouteRef <- Ref.new Nothing
   let
