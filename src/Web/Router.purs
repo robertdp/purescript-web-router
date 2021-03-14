@@ -1,4 +1,15 @@
-module Web.Router where
+module Web.Router
+  ( module Types
+  , makeRouter
+  , override
+  , redirect
+  , continue
+  , _Event
+  , _Transitioning
+  , _Resolved
+  , isTransitioning
+  , isResolved
+  ) where
 
 import Prelude
 import Control.Monad.Free.Trans (liftFreeT, runFreeT)
@@ -9,6 +20,7 @@ import Effect.Aff (error, killFiber, launchAff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Ref as Ref
 import Web.Router.Types (Command(..), Driver(..), Event(..), Resolved, Router, Transition(..), Transitioning)
+import Web.Router.Types (Driver, Driver', Event(..), Resolved, Router, Transition, TransitionState, Transitioning) as Types
 
 makeRouter ::
   forall i o.
