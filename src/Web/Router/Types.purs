@@ -28,11 +28,11 @@ newtype Driver i o
 type Driver' route
   = Driver route route
 
-data Event route
+data RouterState route
   = Transitioning (Maybe route) route
   | Resolved (Maybe route) route
 
-derive instance eqRoute :: Eq route => Eq (Event route)
+derive instance eqRoute :: Eq route => Eq (RouterState route)
 
 data Command :: Type -> Type -> Type -> Type
 data Command i o a
