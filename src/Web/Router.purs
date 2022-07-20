@@ -7,7 +7,7 @@ import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Ref as Ref
 import Web.Router.Internal.Control (Command(..), Resolved, RouterM, Routing, runRouter)
-import Web.Router.Internal.Control (Resolved, RouterM, Routing) as Control
+import Web.Router.Internal.Control (Resolved, RouterIndex, RouterM, Routing, continue, override, redirect) as Control
 import Web.Router.Internal.Types (Driver(..), Router, RouterEvent(..))
 import Web.Router.Internal.Types (Driver, Router, RouterEvent(..), _Resolved, _RouterEvent, _Routing, isResolved, isRouting) as Types
 
