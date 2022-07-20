@@ -1,15 +1,4 @@
-module Web.Router.Internal.Control
-  ( Command(..)
-  , Resolved
-  , RouterM
-  , RouterIndex
-  , Routing
-  , continue
-  , override
-  , redirect
-  , runRouter
-  )
-  where
+module Web.Router.Internal.Control where
 
 import Prelude
 

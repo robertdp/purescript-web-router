@@ -1,4 +1,8 @@
-module Web.Router (module Control, module Types, mkRouter) where
+module Web.Router
+  ( module Control
+  , module Types
+  , mkRouter
+  ) where
 
 import Prelude
 import Data.Maybe (Maybe(..))

@@ -1,14 +1,4 @@
-module Web.Router.Internal.Types
-  ( Driver'
-  , Driver(..)
-  , Router
-  , RouterEvent(..)
-  , _Resolved
-  , _RouterEvent
-  , _Routing
-  , isResolved
-  , isRouting
-  ) where
+module Web.Router.Internal.Types where
 
 import Prelude
 import Data.Lens (Lens', Prism', is, lens, prism')
