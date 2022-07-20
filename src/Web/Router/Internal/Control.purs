@@ -54,24 +54,24 @@ instance IxBind (RouterM i o) where
 
 instance IxMonad (RouterM i o)
 
-instance (TypeEquals Routing x) => Functor (RouterM i o x x) where
+instance TypeEquals Routing x => Functor (RouterM i o x x) where
   map = imap
 
-instance (TypeEquals Routing x) => Apply (RouterM i o x x) where
+instance TypeEquals Routing x => Apply (RouterM i o x x) where
  apply = iapply
 
-instance (TypeEquals Routing x) => Applicative (RouterM i o x x) where
+instance TypeEquals Routing x => Applicative (RouterM i o x x) where
   pure = ipure
 
-instance (TypeEquals Routing x) => Bind (RouterM i o x x) where
+instance TypeEquals Routing x => Bind (RouterM i o x x) where
   bind = ibind
 
-instance (TypeEquals Routing x) => Monad (RouterM i o x x)
+instance TypeEquals Routing x => Monad (RouterM i o x x)
 
-instance (TypeEquals Routing x) => MonadEffect (RouterM i o x x) where
+instance TypeEquals Routing x => MonadEffect (RouterM i o x x) where
   liftEffect eff = RouterM (liftEffect eff)
 
-instance (TypeEquals Routing x) => MonadAff (RouterM i o x x) where
+instance TypeEquals Routing x => MonadAff (RouterM i o x x) where
   liftAff aff = RouterM (liftAff aff)
 
 runRouter :: forall i o. (forall a. Command i o a -> Aff Unit) -> RouterM i o Routing Resolved Unit -> Aff Unit
