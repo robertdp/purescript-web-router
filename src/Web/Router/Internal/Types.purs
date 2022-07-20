@@ -11,13 +11,11 @@ type Router route
     , redirect :: route -> Effect Unit
     }
 
-newtype Driver :: Type -> Type -> Type
-newtype Driver i o
-  = Driver
-  { initialize :: (i -> Effect Unit) -> Effect (Effect Unit)
-  , navigate :: o -> Effect Unit
-  , redirect :: o -> Effect Unit
-  }
+type Driver i o
+  = { initialize :: (i -> Effect Unit) -> Effect (Effect Unit)
+    , navigate :: o -> Effect Unit
+    , redirect :: o -> Effect Unit
+    }
 
 type Driver' route
   = Driver route route

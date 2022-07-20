@@ -12,7 +12,7 @@ import Effect.Class (liftEffect)
 import Effect.Ref as Ref
 import Web.Router.Internal.Control (RouterCommand(..), Resolved, RouterM, Routing, runRouter)
 import Web.Router.Internal.Control (Resolved, RouterIndex, RouterM, Routing, continue, override, redirect) as Control
-import Web.Router.Internal.Types (Driver(..), Router, RouterEvent(..))
+import Web.Router.Internal.Types (Driver, Router, RouterEvent(..))
 import Web.Router.Internal.Types (Driver, Driver', Router, RouterEvent(..), _Resolved, _RouterEvent, _Routing, isResolved, isRouting) as Types
 
 mkRouter ::
@@ -21,7 +21,7 @@ mkRouter ::
   (RouterEvent i -> Effect Unit) ->
   Driver i o ->
   Effect (Router o)
-mkRouter onRouteStart onEvent (Driver driver) = do
+mkRouter onRouteStart onEvent driver = do
   lastEventRef <- Ref.new Nothing
   let
     readPreviousRoute :: Effect (Maybe i)
