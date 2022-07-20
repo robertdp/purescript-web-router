@@ -13,13 +13,13 @@ import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Type.Equality (class TypeEquals)
 
-data Command ::  Type -> Type -> Type -> Type
-data Command i o a
+data RouterCommand ::  Type -> Type -> Type -> Type
+data RouterCommand i o a
   = Continue
   | Override i
   | Redirect o
 
-derive instance Functor (Command i o)
+derive instance Functor (RouterCommand i o)
 
 data RouterIndex
 foreign import data Routing :: RouterIndex
@@ -27,7 +27,7 @@ foreign import data Resolved :: RouterIndex
 
 newtype RouterM :: Type -> Type -> RouterIndex -> RouterIndex -> Type -> Type
 newtype RouterM i o x y a
-  = RouterM (FreeT (Command i o) Aff a)
+  = RouterM (FreeT (RouterCommand i o) Aff a)
 
 instance IxFunctor (RouterM i o) where
   imap f (RouterM r) = RouterM (map f r)
@@ -63,7 +63,7 @@ instance TypeEquals Routing x => MonadEffect (RouterM i o x x) where
 instance TypeEquals Routing x => MonadAff (RouterM i o x x) where
   liftAff aff = RouterM (liftAff aff)
 
-runRouter :: forall i o. (forall a. Command i o a -> Aff Unit) -> RouterM i o Routing Resolved Unit -> Aff Unit
+runRouter :: forall i o. (forall a. RouterCommand i o a -> Aff Unit) -> RouterM i o Routing Resolved Unit -> Aff Unit
 runRouter handleCmd (RouterM router) = runFreeT (\cmd -> handleCmd cmd *> mempty) router
 
 continue :: forall i o. RouterM i o Routing Resolved Unit
