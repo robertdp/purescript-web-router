@@ -6,13 +6,13 @@ import Effect (Effect)
 import Foreign (unsafeToForeign)
 import Routing.PushState (PushStateInterface)
 import Routing.PushState as PushState
-import Web.Router.Types (Driver(..))
+import Web.Router.Internal.Types (Driver(..))
 
-makeDriver :: forall f i o. Foldable f => (String -> f i) -> (o -> String) -> Effect (Driver i o)
-makeDriver parser printer = makeDriver_ parser printer <$> PushState.makeInterface
+mkDriver :: forall f i o. Foldable f => (String -> f i) -> (o -> String) -> Effect (Driver i o)
+mkDriver parser printer = mkDriver_ parser printer <$> PushState.makeInterface
 
-makeDriver_ :: forall f i o. Foldable f => (String -> f i) -> (o -> String) -> PushStateInterface -> Driver i o
-makeDriver_ parser printer interface =
+mkDriver_ :: forall f i o. Foldable f => (String -> f i) -> (o -> String) -> PushStateInterface -> Driver i o
+mkDriver_ parser printer interface =
   Driver
     { initialize: \k -> PushState.matchesWith parser (\_ -> k) interface
     , navigate: interface.pushState (unsafeToForeign {}) <<< printer

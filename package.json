@@ -4,14 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "spago build"
+    "build": "spago build",
+    "postinstall": "spago install"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "purescript": "^0.14.0",
+    "purescript": "^0.15.4",
     "purescript-psa": "^0.8.2",
     "purty": "^7.0.0",
-    "spago": "^0.19.1"
+    "spago": "^0.20.9"
   }
 }
