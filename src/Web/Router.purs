@@ -9,7 +9,7 @@ import Effect.Ref as Ref
 import Web.Router.Internal.Control (Command(..), Resolved, RouterM, Routing, runRouter)
 import Web.Router.Internal.Control (Resolved, RouterIndex, RouterM, Routing, continue, override, redirect) as Control
 import Web.Router.Internal.Types (Driver(..), Router, RouterEvent(..))
-import Web.Router.Internal.Types (Driver, Router, RouterEvent(..), _Resolved, _RouterEvent, _Routing, isResolved, isRouting) as Types
+import Web.Router.Internal.Types (Driver, Driver', Router, RouterEvent(..), _Resolved, _RouterEvent, _Routing, isResolved, isRouting) as Types
 
 mkRouter ::
   forall i o.
