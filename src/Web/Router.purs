@@ -5,15 +5,16 @@ module Web.Router
   ) where
 
 import Prelude
+import Data.Foldable (for_)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
-import Effect.Aff (Aff, launchAff_)
+import Effect.Aff (Aff, error, killFiber, launchAff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Ref as Ref
-import Web.Router.Internal.Control (RouterCommand(..), Resolved, RouterM, Routing, runRouter)
 import Web.Router.Internal.Control (Resolved, RouterIndex, RouterM, Routing, continue, override, redirect) as Control
-import Web.Router.Internal.Types (Driver, Router, RouterEvent(..))
+import Web.Router.Internal.Control (RouterCommand(..), Resolved, RouterM, Routing, runRouter)
 import Web.Router.Internal.Types (Driver, Driver', Router, RouterEvent(..), _Resolved, _RouterEvent, _Routing, isResolved, isRouting) as Types
+import Web.Router.Internal.Types (Driver, Router, RouterEvent(..))
 
 mkRouter ::
   forall i o.
@@ -22,6 +23,7 @@ mkRouter ::
   Driver i o ->
   Effect (Router o)
 mkRouter onRouteStart onEvent driver = do
+  lastFiberRef <- Ref.new Nothing
   lastEventRef <- Ref.new Nothing
   let
     readPreviousRoute :: Effect (Maybe i)
@@ -42,15 +44,21 @@ mkRouter onRouteStart onEvent driver = do
       liftEffect do
         previousRoute <- readPreviousRoute
         case cmd of
-          Continue -> handleEvent (Resolved previousRoute newRoute)
-          Override route -> handleEvent (Resolved previousRoute route)
+          Continue -> handleEvent $ Resolved previousRoute newRoute
+          Override route -> handleEvent $ Resolved previousRoute route
           Redirect route -> driver.redirect route
 
     runRouter' :: i -> Effect Unit
     runRouter' newRoute = do
+      lastFiber <- Ref.read lastFiberRef
+      for_ lastFiber $ killFiber (error "Killing previous routing fiber") >>> launchAff_
       previousRoute <- readPreviousRoute
-      handleEvent (Routing previousRoute newRoute)
-      launchAff_ (runRouter (onCommand newRoute) (onRouteStart previousRoute newRoute))
+      handleEvent $ Routing previousRoute newRoute
+      newFiber <-
+        onRouteStart previousRoute newRoute
+          # runRouter (onCommand newRoute)
+          # launchAff
+      Ref.write (Just newFiber) lastFiberRef
   pure
     { initialize: driver.initialize runRouter'
     , navigate: driver.navigate
