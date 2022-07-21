@@ -1,10 +1,12 @@
 module Web.Router
   ( module Control
+  , module Ix
   , module Types
   , mkRouter
   ) where
 
 import Prelude
+import Control.Monad.Indexed.Qualified (apply, bind, discard, map, pure) as Ix
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)

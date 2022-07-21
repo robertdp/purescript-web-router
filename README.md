@@ -98,7 +98,7 @@ import Web.Router as Router
 
 ```purescript
 onNavigation :: Maybe Route -> Route -> Router.RouterM Route Page Router.Routing Router.Resolved Unit
-onNavigation previousRoute requestedRoute = do
+onNavigation previousRoute requestedRoute = Router.do
   Router.continue -- accept the navigation to the requested route
 
 onEvent :: Router.RoutingEvent Route -> Effect Unit
