@@ -5,26 +5,25 @@ import Data.Lens (Lens', Prism', is, lens, prism')
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 
-type Router route
-  = { initialize :: Effect (Effect Unit)
-    , navigate :: route -> Effect Unit
-    , redirect :: route -> Effect Unit
-    }
+type Router route =
+  { initialize :: Effect (Effect Unit)
+  , navigate :: route -> Effect Unit
+  , redirect :: route -> Effect Unit
+  }
 
-type Driver i o
-  = { initialize :: (i -> Effect Unit) -> Effect (Effect Unit)
-    , navigate :: o -> Effect Unit
-    , redirect :: o -> Effect Unit
-    }
+type Driver i o =
+  { initialize :: (i -> Effect Unit) -> Effect (Effect Unit)
+  , navigate :: o -> Effect Unit
+  , redirect :: o -> Effect Unit
+  }
 
-type Driver' route
-  = Driver route route
+type Driver' route = Driver route route
 
 data RouterEvent route
   = Routing (Maybe route) route
   | Resolved (Maybe route) route
 
-derive instance eqRoute :: Eq route => Eq (RouterEvent route)
+derive instance Eq route => Eq (RouterEvent route)
 
 _RouterEvent :: forall route. Lens' (RouterEvent route) route
 _RouterEvent = lens getter setter

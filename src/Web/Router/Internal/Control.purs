@@ -13,7 +13,7 @@ import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Type.Equality (class TypeEquals)
 
-data RouterCommand ::  Type -> Type -> Type -> Type
+data RouterCommand :: Type -> Type -> Type -> Type
 data RouterCommand i o a
   = Continue
   | Override i
@@ -22,12 +22,12 @@ data RouterCommand i o a
 derive instance Functor (RouterCommand i o)
 
 data RouterIndex
+
 foreign import data Routing :: RouterIndex
 foreign import data Resolved :: RouterIndex
 
 newtype RouterM :: Type -> Type -> RouterIndex -> RouterIndex -> Type -> Type
-newtype RouterM i o x y a
-  = RouterM (FreeT (RouterCommand i o) Aff a)
+newtype RouterM i o x y a = RouterM (FreeT (RouterCommand i o) Aff a)
 
 instance IxFunctor (RouterM i o) where
   imap f (RouterM r) = RouterM (map f r)
@@ -47,7 +47,7 @@ instance TypeEquals Routing x => Functor (RouterM i o x x) where
   map = imap
 
 instance TypeEquals Routing x => Apply (RouterM i o x x) where
- apply = iapply
+  apply = iapply
 
 instance TypeEquals Routing x => Applicative (RouterM i o x x) where
   pure = ipure

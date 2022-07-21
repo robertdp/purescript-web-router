@@ -16,13 +16,13 @@ import Web.Router.Internal.Control (RouterCommand(..), Resolved, RouterM, Routin
 import Web.Router.Internal.Types (Driver, Driver', Router, RouterEvent(..), _Resolved, _RouterEvent, _Routing, isResolved, isRouting) as Types
 import Web.Router.Internal.Types (Driver, Router, RouterEvent(..))
 
-mkRouter ::
-  forall i o.
-  (Maybe i -> i -> RouterM i o Routing Resolved Unit) ->
-  (RouterEvent i -> Effect Unit) ->
-  Driver i o ->
-  Effect (Router o)
-mkRouter onRouteStart onEvent driver = do
+mkRouter
+  :: forall i o
+   . (Maybe i -> i -> RouterM i o Routing Resolved Unit)
+  -> (RouterEvent i -> Effect Unit)
+  -> Driver i o
+  -> Effect (Router o)
+mkRouter onNavigation onEvent driver = do
   lastFiberRef <- Ref.new Nothing
   lastEventRef <- Ref.new Nothing
   let
@@ -30,9 +30,9 @@ mkRouter onRouteStart onEvent driver = do
     readPreviousRoute =
       Ref.read lastEventRef
         <#> case _ of
-            Just (Resolved _ route) -> Just route
-            Just (Routing (Just route) _) -> Just route
-            _ -> Nothing
+          Just (Resolved _ route) -> Just route
+          Just (Routing (Just route) _) -> Just route
+          _ -> Nothing
 
     handleEvent :: RouterEvent i -> Effect Unit
     handleEvent event = do
@@ -55,7 +55,7 @@ mkRouter onRouteStart onEvent driver = do
       previousRoute <- readPreviousRoute
       handleEvent $ Routing previousRoute newRoute
       newFiber <-
-        onRouteStart previousRoute newRoute
+        onNavigation previousRoute newRoute
           # runRouter (onCommand newRoute)
           # launchAff
       Ref.write (Just newFiber) lastFiberRef
