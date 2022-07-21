@@ -102,11 +102,11 @@ onNavigation previousRoute requestedRoute =
   case requestedRoute of
     NotFound ->
       case previousRoute of
-        Just route -> Router.do
+        Just (Page page) -> Router.do
           liftEffect showBrokenNavigationMessage
-          Router.redirect route -- redirect back to the previous route and show a message
-        Nothing ->
-          Router.continue -- no previous route, so just show the "not found" page
+          Router.redirect page -- redirect back to the previous page and show a message
+        _ ->
+          Router.continue -- no previous page, so just show the "not found" page
     _ -> Router.do
       access <- liftAff fetchUserAccess
       if userHasAccess requestedRoute access then
