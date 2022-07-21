@@ -1,94 +1,68 @@
 module Web.Router
-  ( module Types
-  , makeRouter
-  , override
-  , redirect
-  , continue
-  , _RouterState
-  , _Transitioning
-  , _Resolved
-  , isTransitioning
-  , isResolved
+  ( module Control
+  , module Ix
+  , module Types
+  , mkInterface
   ) where
 
 import Prelude
-import Control.Monad.Free.Trans (liftFreeT, runFreeT)
-import Data.Lens (Lens', Prism', is, lens, prism')
+import Control.Monad.Indexed.Qualified (apply, bind, discard, map, pure) as Ix
+import Data.Foldable (for_)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
-import Effect.Aff (error, killFiber, launchAff, launchAff_)
+import Effect.Aff (Aff, error, killFiber, launchAff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Ref as Ref
-import Web.Router.Types (Command(..), Driver(..), RouterState(..), Resolved, Router, Transition(..), Transitioning)
-import Web.Router.Types (Driver, Driver', RouterState(..), Resolved, Router, Transition, TransitionState, Transitioning) as Types
+import Web.Router.Internal.Control (Resolved, RouterIndex, RouterM, Routing, continue, override, redirect) as Control
+import Web.Router.Internal.Control (RouterCommand(..), Resolved, RouterM, Routing, runRouter)
+import Web.Router.Internal.Types (DriverInterface, DriverInterface', RouterEvent(..), RouterInterface, _Resolved, _RouterEvent, _Routing, isResolved, isRouting) as Types
+import Web.Router.Internal.Types (DriverInterface, RouterEvent(..), RouterInterface)
 
-makeRouter ::
-  forall i o.
-  (Maybe i -> i -> Transition i o Transitioning Resolved Unit) ->
-  (RouterState i -> Effect Unit) ->
-  Driver i o ->
-  Effect (Router o)
-makeRouter handleTransition handleState (Driver driver) = do
-  fiberRef <- Ref.new (pure unit)
-  previousRouteRef <- Ref.new Nothing
+mkInterface
+  :: forall i o
+   . (Maybe i -> i -> RouterM i o Routing Resolved Unit)
+  -> (RouterEvent i -> Effect Unit)
+  -> DriverInterface i o
+  -> Effect (RouterInterface o)
+mkInterface onNavigation onEvent driver = do
+  lastFiberRef <- Ref.new Nothing
+  lastEventRef <- Ref.new Nothing
   let
-    runRouter route = do
-      oldFiber <- Ref.read fiberRef
-      launchAff_ (killFiber (error "Transition cancelled") oldFiber)
-      previousRoute <- Ref.read previousRouteRef
-      handleState (Transitioning previousRoute route)
-      let
-        finalise r =
-          liftEffect do
-            Ref.write (Just r) previousRouteRef
-            handleState $ Resolved previousRoute r
-      fiber <-
-        launchAff case handleTransition previousRoute route of
-          Transition router ->
-            router
-              # runFreeT \cmd -> do
-                  case cmd of
-                    Redirect route' -> liftEffect do driver.redirect route'
-                    Override route' -> finalise route'
-                    Continue -> finalise route
-                  mempty
-      Ref.write fiber fiberRef
-  pure { initialize: driver.initialize runRouter, navigate: driver.navigate, redirect: driver.redirect }
+    readPreviousRoute :: Effect (Maybe i)
+    readPreviousRoute =
+      Ref.read lastEventRef
+        <#> case _ of
+          Just (Resolved _ route) -> Just route
+          Just (Routing (Just route) _) -> Just route
+          _ -> Nothing
 
-override :: forall i o. i -> Transition i o Transitioning Resolved Unit
-override route = Transition (liftFreeT (Override route))
+    handleEvent :: RouterEvent i -> Effect Unit
+    handleEvent event = do
+      Ref.write (Just event) lastEventRef
+      onEvent event
 
-redirect :: forall i o. o -> Transition i o Transitioning Resolved Unit
-redirect route = Transition (liftFreeT (Redirect route))
+    onCommand :: forall a. i -> RouterCommand i o a -> Aff Unit
+    onCommand newRoute cmd =
+      liftEffect do
+        previousRoute <- readPreviousRoute
+        case cmd of
+          Continue -> handleEvent $ Resolved previousRoute newRoute
+          Override route -> handleEvent $ Resolved previousRoute route
+          Redirect route -> driver.redirect route
 
-continue :: forall i o. Transition i o Transitioning Resolved Unit
-continue = Transition (liftFreeT Continue)
-
-_RouterState :: forall route. Lens' (RouterState route) route
-_RouterState = lens getter setter
-  where
-  getter = case _ of
-    Transitioning _ route -> route
-    Resolved _ route -> route
-
-  setter = case _ of
-    Transitioning route _ -> Transitioning route
-    Resolved route _ -> Resolved route
-
-_Transitioning :: forall route. Prism' (RouterState route) route
-_Transitioning =
-  prism' (Transitioning Nothing) case _ of
-    Transitioning _ route -> Just route
-    _ -> Nothing
-
-_Resolved :: forall route. Prism' (RouterState route) route
-_Resolved =
-  prism' (Resolved Nothing) case _ of
-    Resolved _ route -> Just route
-    _ -> Nothing
-
-isTransitioning :: forall route. RouterState route -> Boolean
-isTransitioning = is _Transitioning
-
-isResolved :: forall route. RouterState route -> Boolean
-isResolved = is _Resolved
+    runRouter' :: i -> Effect Unit
+    runRouter' newRoute = do
+      lastFiber <- Ref.read lastFiberRef
+      for_ lastFiber $ killFiber (error "Killing previous routing fiber") >>> launchAff_
+      previousRoute <- readPreviousRoute
+      handleEvent $ Routing previousRoute newRoute
+      newFiber <-
+        onNavigation previousRoute newRoute
+          # runRouter (onCommand newRoute)
+          # launchAff
+      Ref.write (Just newFiber) lastFiberRef
+  pure
+    { initialize: driver.initialize runRouter'
+    , navigate: driver.navigate
+    , redirect: driver.redirect
+    }
