@@ -1,6 +1,6 @@
 # purescript-web-router
 
-A basic router for browsers with support for asynchronous routing logic. Bring your own printing and parsing (check out [routing-duplex](https://github.com/natefaubion/purescript-routing-duplex)).
+A router for browsers that supports asynchronous routing logic. Bring your own printing and parsing (check out [routing-duplex](https://github.com/natefaubion/purescript-routing-duplex)).
 
 For a basic React example see [here](https://github.com/robertdp/purescript-web-router-example/tree/master/src).
 
