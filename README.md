@@ -33,7 +33,8 @@ This example uses [routing-duplex](https://github.com/natefaubion/purescript-rou
 
 <details>
 <summary>Imports</summary>
-<pre>
+
+```purescript
 import Prelude hiding ((/))
 import Data.Either (Either)
 import Data.Generic.Rep (class Generic)
@@ -41,7 +42,8 @@ import Routing.Duplex (RouteDuplex', default, end, int, parse, print, root, segm
 import Routing.Duplex.Generic (noArgs, sum)
 import Routing.Duplex.Generic.Syntax ((/))
 import Routing.Duplex.Parser (RouteError)
-</pre>
+```
+
 </details>
 
 ```purescript
@@ -87,9 +89,11 @@ printRoute = print pages
 
 <details>
 <summary>Imports</summary>
-<pre>
+
+```purescript
 import Web.Router as Router
-</pre>
+```
+
 </details>
 
 ```purescript
@@ -111,10 +115,12 @@ onEvent newEvent =
 
 <details>
 <summary>Imports</summary>
-<pre>
+
+```purescript
 import Web.Router as Router
 import Web.Router.Driver.PushState as PushState
-</pre>
+```
+
 </details>
 
 ```purescript
