@@ -78,7 +78,7 @@ parseRoute = parse routes
 -- | This is the route printer we need to pass to the driver.
 -- | It can only print paths to valid pages, which means a path can't be produced for the `NotFound` route.
 -- | With this approach routes can be seperated based on whether they should be a navigation target and have a URL.
--- | Note: assymetry is not required, and a symmetrical printer works just fine as well.
+-- | Note: assymetry is not required, and a symmetrical printer works as well.
 printRoute :: Page -> String
 printRoute = print pages
 ```
