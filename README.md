@@ -98,8 +98,20 @@ import Web.Router as Router
 
 ```purescript
 onNavigation :: Maybe Route -> Route -> Router.RouterM Route Page Router.Routing Router.Resolved Unit
-onNavigation previousRoute requestedRoute = Router.do
-  Router.continue -- accept the navigation to the requested route
+onNavigation previousRoute requestedRoute =
+  case requestedRoute, previousRoute of
+    NotFound, Just route -> Router.do
+      liftEffect showBrokenNavigationMessage
+      Router.redirect route -- redirect back to the previous route and show a message
+    NotFound, Nothing ->
+      Router.continue -- no previous route, so just show the "not found" page
+    _ -> Router.do
+      access <- liftAff fetchAccessForRoute
+      if userHasAccess requestedRoute access then
+        Router.continue -- they have access, so continue
+      else
+        Router.override NotFound -- no access, so pretend the page doesn't exist
+
 
 onEvent :: Router.RoutingEvent Route -> Effect Unit
 onEvent newEvent =
