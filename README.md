@@ -106,7 +106,7 @@ onNavigation previousRoute requestedRoute =
     NotFound, Nothing ->
       Router.continue -- no previous route, so just show the "not found" page
     _ -> Router.do
-      access <- liftAff fetchAccessForRoute
+      access <- liftAff fetchUserAccess
       if userHasAccess requestedRoute access then
         Router.continue -- they have access, so continue
       else
