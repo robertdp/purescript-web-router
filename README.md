@@ -100,9 +100,9 @@ onNavigation previousRoute requestedRoute = do
 onEvent :: Router.RoutingEvent Route -> Effect Unit
 onEvent newEvent =
   case newEvent of
-    Router.Routing oldRoute requestedRoute ->
+    Router.Routing previousRoute requestedRoute ->
       showNavigationSpinner
-    Router.Resolved oldRoute newRoute ->
+    Router.Resolved previousRoute newRoute ->
       hideNavigationSpinner
       setCurrentRoute newRoute
 ```
