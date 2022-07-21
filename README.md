@@ -37,7 +37,7 @@ This example uses [routing-duplex](https://github.com/natefaubion/purescript-rou
 import Prelude hiding ((/))
 import Data.Either (Either)
 import Data.Generic.Rep (class Generic)
-import Routing.Duplex (RouteDuplex', default, int, parse, print, root, segment)
+import Routing.Duplex (RouteDuplex', default, end, int, parse, print, root, segment)
 import Routing.Duplex.Generic (noArgs, sum)
 import Routing.Duplex.Generic.Syntax ((/))
 import Routing.Duplex.Parser (RouteError)
@@ -55,13 +55,13 @@ routes :: RouteDuplex' Route
 routes =
   default NotFound $
     sum
-      { "Page": pages
+      { "Page": root pages
       , "NotFound": "404" / noArgs
       }
 
 pages :: RouteDuplex' Page
 pages =
-  root $
+  end $
     sum
       { "Home": noArgs
       , "ProductList": "products" / noArgs
