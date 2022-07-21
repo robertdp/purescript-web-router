@@ -70,14 +70,15 @@ pages =
       , "ContactUs": "about" / noArgs
       }
 
--- This is route parser we need to pass to the driver.
--- It can produce any route which allows the parser to return a value of `NotFound` instead of failing.
+-- | This is route parser we need to pass to the driver.
+-- | It can produce any route which allows the parser to return a value of `NotFound` instead of failing.
 parseRoute :: forall  String -> Either RouteError Route
 parseRoute = parse routes
 
--- This is the route printer we need to pass to the driver.
--- It can only print paths to valid pages, which means a path can't be produced for the `NotFound` route.
--- With this approach routes can be seperated based on whether they should be a navigation target and have a URL.
+-- | This is the route printer we need to pass to the driver.
+-- | It can only print paths to valid pages, which means a path can't be produced for the `NotFound` route.
+-- | With this approach routes can be seperated based on whether they should be a navigation target and have a URL.
+-- | Note: assymetry is not required, and a symmetrical printer works just fine as well.
 printRoute :: Page -> String
 printRoute = print pages
 ```
