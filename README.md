@@ -93,11 +93,11 @@ import Web.Router as Router
 </details>
 
 ```purescript
-onNavigation :: Maybe Route -> Route -> RouterM Route Page Routing Resolved Unit
+onNavigation :: Maybe Route -> Route -> Router.RouterM Route Page Router.Routing Router.Resolved Unit
 onNavigation previousRoute requestedRoute = do
   Router.continue -- accept the navigation to the requested route
 
-onEvent :: RoutingEvent Route -> Effect Unit
+onEvent :: Router.RoutingEvent Route -> Effect Unit
 onEvent newEvent =
   case newEvent of
     Router.Routing oldRoute newRoute ->
