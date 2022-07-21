@@ -108,7 +108,7 @@ onNavigation previousRoute requestedRoute =
     _ -> Router.do
       access <- liftAff fetchUserAccess
       if userHasAccess requestedRoute access then
-        Router.continue -- they have access, so continue
+        Router.continue -- they have access, so resolve with the requested page
       else
         Router.override NotFound -- no access, so pretend the page doesn't exist
 
