@@ -5,19 +5,19 @@ import Data.Lens (Lens', Prism', is, lens, prism')
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 
-type Router route =
+type RouterInterface route =
   { initialize :: Effect (Effect Unit)
   , navigate :: route -> Effect Unit
   , redirect :: route -> Effect Unit
   }
 
-type Driver i o =
+type DriverInterface i o =
   { initialize :: (i -> Effect Unit) -> Effect (Effect Unit)
   , navigate :: o -> Effect Unit
   , redirect :: o -> Effect Unit
   }
 
-type Driver' route = Driver route route
+type DriverInterface' route = DriverInterface route route
 
 data RouterEvent route
   = Routing (Maybe route) route

@@ -1,12 +1,12 @@
-module Web.Router.Driver.Hash where
+module Web.Router.Hash where
 
 import Prelude
 import Data.Foldable (class Foldable)
 import Routing.Hash as Hash
-import Web.Router.Internal.Types (Driver)
+import Web.Router.Internal.Types (DriverInterface)
 
-mkDriver :: forall f i o. Foldable f => (String -> f i) -> (o -> String) -> Driver i o
-mkDriver parser printer =
+mkInterface :: forall f i o. Foldable f => (String -> f i) -> (o -> String) -> DriverInterface i o
+mkInterface parser printer =
   { initialize: Hash.matchesWith parser <<< const
   , navigate: Hash.setHash <<< printer
   , redirect: Hash.setHash <<< printer

@@ -2,7 +2,7 @@ module Web.Router
   ( module Control
   , module Ix
   , module Types
-  , mkRouter
+  , mkInterface
   ) where
 
 import Prelude
@@ -15,16 +15,16 @@ import Effect.Class (liftEffect)
 import Effect.Ref as Ref
 import Web.Router.Internal.Control (Resolved, RouterIndex, RouterM, Routing, continue, override, redirect) as Control
 import Web.Router.Internal.Control (RouterCommand(..), Resolved, RouterM, Routing, runRouter)
-import Web.Router.Internal.Types (Driver, Driver', Router, RouterEvent(..), _Resolved, _RouterEvent, _Routing, isResolved, isRouting) as Types
-import Web.Router.Internal.Types (Driver, Router, RouterEvent(..))
+import Web.Router.Internal.Types (DriverInterface, DriverInterface', RouterEvent(..), RouterInterface, _Resolved, _RouterEvent, _Routing, isResolved, isRouting) as Types
+import Web.Router.Internal.Types (DriverInterface, RouterEvent(..), RouterInterface)
 
-mkRouter
+mkInterface
   :: forall i o
    . (Maybe i -> i -> RouterM i o Routing Resolved Unit)
   -> (RouterEvent i -> Effect Unit)
-  -> Driver i o
-  -> Effect (Router o)
-mkRouter onNavigation onEvent driver = do
+  -> DriverInterface i o
+  -> Effect (RouterInterface o)
+mkInterface onNavigation onEvent driver = do
   lastFiberRef <- Ref.new Nothing
   lastEventRef <- Ref.new Nothing
   let

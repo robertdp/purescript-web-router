@@ -118,7 +118,7 @@ onEvent newEvent =
 
 ```purescript
 import Web.Router as Router
-import Web.Router.Driver.PushState as PushState
+import Web.Router.PushState as PushState
 ```
 
 </details>
@@ -126,8 +126,8 @@ import Web.Router.Driver.PushState as PushState
 ```purescript
 mkRouter :: Effect (Router.Router Route Page)
 mkRouter = do
-  driver <- PushState.mkDriver parseRoute printRoute
-  router <- Router.mkRouter onNavigation onEvent
+  driver <- PushState.mkInterface parseRoute printRoute
+  router <- Router.mkInterface onNavigation onEvent driver
   pure router
 ```
 
