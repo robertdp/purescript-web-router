@@ -125,4 +125,4 @@ mkRouter = do
   pure router
 ```
 
-Both pushstate and hash drivers are included, or a custom driver can be implemented. An example of a custom driver could be one that synchronises some navigation state over sockets, allowing an experience where one users behaviour could be broadcast to multiple users to follow along.
+Both pushstate and hash drivers are included, or a custom driver can be implemented. An example of a custom driver could be one that synchronises some navigation state over sockets, for an experience where one user's behaviour could be broadcast to multiple users to follow along.
