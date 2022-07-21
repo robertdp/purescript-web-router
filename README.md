@@ -57,13 +57,13 @@ routes :: RouteDuplex' Route
 routes =
   default NotFound $
     sum
-      { "Page": root pages
+      { "Page": pages
       , "NotFound": "404" / noArgs
       }
 
 pages :: RouteDuplex' Page
 pages =
-  end $
+  root $ end $
     sum
       { "Home": noArgs
       , "ProductList": "products" / noArgs
