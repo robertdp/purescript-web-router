@@ -72,7 +72,7 @@ pages =
       , "ContactUs": "about" / noArgs
       }
 
--- | This is route parser we need to pass to the driver.
+-- | This is the route parser we need to pass to the driver.
 -- | It can produce any route which allows the parser to return a value of `NotFound` instead of failing.
 parseRoute :: forall  String -> Either RouteError Route
 parseRoute = parse routes
