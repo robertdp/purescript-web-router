@@ -85,7 +85,7 @@ printRoute :: Page -> String
 printRoute = print pages
 ```
 
-### Define how your application reacts to navigation and routing events
+### 4. Define how your application reacts to navigation and routing events
 
 <details>
 <summary>Imports</summary>
@@ -125,7 +125,7 @@ onEvent newEvent =
       setCurrentRoute newRoute
 ```
 
-### Connect up the driver and router
+### 5. Connect up the driver and router
 
 <details>
 <summary>Imports</summary>
