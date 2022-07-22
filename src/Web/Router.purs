@@ -30,8 +30,8 @@ mkInterface onNavigation onEvent driver = do
   let
     readPreviousRoute :: Effect (Maybe i)
     readPreviousRoute =
-      Ref.read lastEventRef
-        <#> case _ of
+      Ref.read lastEventRef <#>
+        case _ of
           Just (Resolved _ route) -> Just route
           Just (Routing (Just route) _) -> Just route
           _ -> Nothing
