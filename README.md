@@ -8,7 +8,7 @@ For a basic React example see [here](https://github.com/robertdp/purescript-web-
 
 ### 1. Install with Spago
 
-`$ spago install web-router` (coming soon)
+`$ spago install web-router`
 
 ### 2. Define your routes
 
